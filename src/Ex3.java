@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import InputOutput.DataClass;
-import InputOutput.HeldOutModel;
 import InputOutput.LidstoneModel;
 import InputOutput.Output;
 
@@ -30,33 +29,50 @@ public class Ex3 {
 
 		outputClass.writeOutput(outputFile);
 		outputClass.writeOutput(Output.vocabulary_size);
-		outputClass.writeOutput(1.0/Output.vocabulary_size);
 
 		try 
 		{
 			DataClass devData = new DataClass();
 			devData.readInputFile(devl_inputFile);
 
-			// Output 7
+			// Output 6
 			outputClass.writeOutput(devData.getTotalWordsInDocs());
 
-			Map<String, Integer> lidstoneTrainMap = new TreeMap<String, Integer>();
-			Map<String, Integer> validationMap  = new TreeMap<String, Integer>();
+			Map<String, Map<String, Integer>> lidstoneTrainMap = new TreeMap<String, Map<String, Integer>>();
+			Map<String, Map<String, Integer>> validationMap  = new TreeMap<String, Map<String, Integer>>();
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
 
-			// Output 8
+			// Output 7
 			outputClass.writeOutput(DataClass.wordsTotalAmount(validationMap));
 
-			// Output 9
+			// Output 8
 			outputClass.writeOutput(DataClass.wordsTotalAmount(lidstoneTrainMap));
 
-			// Output 10
+			// Output 9
 			outputClass.writeOutput(lidstoneTrainMap.keySet().size()); 
 
-			// Output 11
-			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord));
+			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord1));
+			
+			// Output 10
+			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord2, inputWord1));
 
-			// Output 12
+			// Output 11
+
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+/*			
 			outputClass.writeOutput(calcPMle(lidstoneTrainMap, inputWord));
 
 			// Output 13
@@ -97,12 +113,6 @@ public class Ex3 {
 			// Output 22
 			outputClass.writeOutput(DataClass.wordsTotalAmount(heldOutMap));
 
-			// Output 23
-			outputClass.writeOutput(HeldOutModel.CalcPHeldOut(heldOutTrainMap, heldOutMap, inputWord));
-
-			// Output 24
-			outputClass.writeOutput(HeldOutModel.CalcPHeldOut(heldOutTrainMap, heldOutMap, unseenWord));
-
 			lambda = 0.1;
 			LidstoneModel.modelSanityCheck(lambda, lidstoneTrainMap);
 			HeldOutModel.modelSanityCheck(heldOutTrainMap, heldOutMap);
@@ -135,7 +145,7 @@ public class Ex3 {
 				long Nr = HeldOutModel.calcNr(heldOutTrainMap, i);
 				long tr = HeldOutModel.calcTr(heldOutTrainMap, heldOutMap, i);
 				outputClass.writeOutputFile("\n"+ i + "\t" + String.format("%.5f", fr) + "\t" + String.format("%.5f", fH) + "\t" + Nr + "\t" + tr + "\t");
-			}
+			}*/
 		} 
 		catch (IOException e) 
 		{
@@ -143,25 +153,35 @@ public class Ex3 {
 		}			
 	}	
 
-	/*
-	 * Returns the Maximum likelihood estimation for the word, by the training map
-	 */
-	private static double calcPMle(Map<String, Integer> trainMap, String word)
+	private static int getNumberOfOccurences(Map<String, Map<String, Integer>> map, String word)
 	{
-		int wordOccurences = getNumberOfOccurences(trainMap, word);
-		long eventsInTraining = DataClass.wordsTotalAmount(trainMap);
-
-		return (double)wordOccurences/eventsInTraining;
+		if (map.get(word) == null)
+		{
+			return 0;
+		}
+		
+		int count = 0;
+		for (int wordCount : map.get(word).values())
+		{
+			count += wordCount;
+		}
+		
+		return count; 
 	}
-
-	private static int getNumberOfOccurences(Map<String, Integer> map, String word)
+	
+	private static int getNumberOfOccurences(Map<String, Map<String, Integer>> map, String word1, String word2)
 	{
-		return map.get(word) == null ? 0 : map.get(word);
+		if (map.get(word1) == null)
+		{
+			return 0;
+		}
+		
+		return map.get(word1).get(word2) == null ? 0 : map.get(word1).get(word2); 
 	}
 
 	/*
 	 * Returns model perplexity
-	 */
+	 
 	private static double calculatePerplexityByLidstone(double lambda, Map<String, Integer> trainingMap, Map<String, Integer> validationMap) 
 	{		
 		double sumPWords = 0;
@@ -224,4 +244,5 @@ public class Ex3 {
 		// return the best lambda
 		return bestLambdaIndex/100.0;
 	}
+	*/
 }

@@ -16,16 +16,17 @@ public class DataClass {
 	private boolean skipLine = true;
 	
 	private List<Set<Topics>> docsTopicList;
-	private List<Map<String,Integer>> docsMapList;
+	
+	private List<Map<String,Map<String, Integer>>> docsMapList;
 	private List<String> docsStringList;
 	
-	private Map<String,Integer> mapTotalDocsWords;
+	private Map<String, Map<String, Integer>> mapTotalDocsWords;
 	private long totalWordsInDocs;
 	
 
 	public DataClass(){
 		this.docsTopicList = new ArrayList<Set<Topics>>();
-		this.docsMapList = new ArrayList<Map<String,Integer>>();
+		this.docsMapList = new ArrayList<Map<String,Map<String, Integer>>>();
 		this.docsStringList = new ArrayList<String>();
 	}
 
@@ -79,44 +80,99 @@ public class DataClass {
 	/*
 	 * Adds each word of the line read to the word mapping 
 	 */
-	private Map<String, Integer> mapWordCount(String inputLine) {
-
-		Map<String, Integer> wordsMap = new TreeMap<String, Integer>();
+	private Map<String, Map<String, Integer>> mapWordCount(String inputLine) 
+	{
+		Map<String, Map<String, Integer>> wordsMap = new TreeMap<String, Map<String, Integer>>();
+		
 		String[] words = inputLine.split(" ");
-		for(String word : words){
-			word = word.toLowerCase();
-			wordsMap.put(word, wordsMap.get(word) == null ? 1 : wordsMap.get(word)+1);
-			Output.writeConsoleWhenTrue(word + "-" + wordsMap.get(word));
+		String prevWord = "begin-article";
+		
+		for(String word : words)
+		{
+			AddWordToMap(wordsMap, word, prevWord);
+			
+			prevWord = word;
 		}
+		
+		System.out.println(wordsTotalAmount(wordsMap));
+		
 		return wordsMap;
 	}
 
+	private void AddWordToMap(Map<String, Map<String, Integer>> wordsMap, String word, String prevWord)
+	{
+		word = word.toLowerCase();
+		
+		Map<String, Integer> wordMap = wordsMap.get(word);
+		
+		if (wordMap == null)
+		{
+			wordsMap.put(word, new TreeMap<String, Integer>());
+		}
+		
+		wordMap = wordsMap.get(word);
+		
+		wordMap.put(prevWord, wordMap.get(prevWord) == null ? 1 : wordMap.get(prevWord) + 1);
+		Output.writeConsoleWhenTrue(word + "-" + wordsMap.get(word));
+	}
+	
 	/*
 	 * Joins the doc map to the total map
 	 */
-	private Map<String, Integer> listMapToMapTotalWordCount(List<Map<String,Integer>> docsList) {
-		Map<String, Integer> wordsCountMap = new TreeMap<String, Integer>();
-		for(Map<String, Integer> docMap : docsList){
+	private Map<String, Map<String, Integer>> listMapToMapTotalWordCount(List<Map<String, Map<String,Integer>>> docsList) 
+	{
+		int count = 0;
+		Map<String, Map<String, Integer>> wordsCountMap = new TreeMap<String, Map<String, Integer>>();
+		for(Map<String, Map<String, Integer>> docMap : docsList){
 			joinMaps(wordsCountMap,docMap);		
+			count++;
+
+			System.out.println(wordsTotalAmount(docMap));
+			System.out.println(wordsTotalAmount(wordsCountMap));
+			System.out.println("Precentage " + (double)count/docsList.size() * 100); 
 		}
+		
 		return wordsCountMap;
 	}
 
-	private void joinMaps(Map<String, Integer> srcMap, Map<String, Integer> otherMap){
-		for (String word : otherMap.keySet()){
-			joinMapValues(srcMap,otherMap,word);
+	private void joinMaps(Map<String, Map<String, Integer>> wordsCountMap, Map<String, Map<String, Integer>> docMap){
+		for (String word : docMap.keySet()){
+			joinMapValues(wordsCountMap,docMap,word);
 		}
 	}
 
 	/*
 	 * Join key from 2 maps
 	 */
-	private void joinMapValues(Map<String, Integer> srcMap, Map<String, Integer> otherMap, String key){
-		srcMap.put(key, srcMap.get(key) == null ? otherMap.get(key) : srcMap.get(key)+otherMap.get(key));
-		Output.writeConsoleWhenTrue(key + "-" + srcMap.get(key));
+	private void joinMapValues(Map<String, Map<String, Integer>> wordsCountMap, Map<String, Map<String, Integer>> docMap, String key)
+	{
+		Map<String, Integer> wordMap = wordsCountMap.get(key);
+		
+		if (wordMap == null)
+		{
+			Map<String, Integer> newWordMap = new TreeMap<String, Integer>();
+			
+			for (String word : docMap.get(key).keySet())
+			{
+				newWordMap.put(word, docMap.get(key).get(word));
+			}
+			
+			wordsCountMap.put(key, newWordMap);
+		}
+		else
+		{
+			for (String word : docMap.get(key).keySet())
+			{
+				int wordApprearances = docMap.get(key).get(word);
+				wordMap.put(word, wordMap.get(word) == null ? wordApprearances : wordMap.get(word) + wordApprearances);				
+			}
+		}
+		
+		Output.writeConsoleWhenTrue(key + "-" + wordsCountMap.get(key));
 	}
 
-	public void splitXPrecentOfDocsWords(double d, Map<String, Integer> firstXPrecentWordsMap, Map<String, Integer> lastXPrecentWordsMap) 
+	public void splitXPrecentOfDocsWords(double d, Map<String, Map<String, Integer>> firstXPrecentWordsMap, 
+			Map<String, Map<String, Integer>> lastXPrecentWordsMap) 
 	{
 		if(d<0||d>1){
 			System.out.println("Precent should be between 0 to 1");
@@ -131,8 +187,8 @@ public class DataClass {
 		int index=0;
 		boolean xPrecentPasted = false;
 		
-		while(count<numFirstXPrecent && !xPrecentPasted){
-			Map<String, Integer> currentDocMap = this.docsMapList.get(index);
+		while(count < numFirstXPrecent && !xPrecentPasted){
+			Map<String, Map<String, Integer>> currentDocMap = this.docsMapList.get(index);
 			long numWordsInDoc = wordsTotalAmount(currentDocMap);
 			
 			// join the next doc (in case we don't pass X precent with the doc)
@@ -145,33 +201,37 @@ public class DataClass {
 				// run over the doc in which we pass the X percent by the order of the words in the doc
 				String currentDocString = this.docsStringList.get(index);
 				String[] words = currentDocString.split(" ");
-				for(String word : words){
-					word = word.toLowerCase();
-					
-					if(!xPrecentPasted && count<numFirstXPrecent)
+				
+				String prevWord = "begin-article";
+				
+				for(String word : words)
+				{					
+					if(!xPrecentPasted && count < numFirstXPrecent)
 					{
+						AddWordToMap(firstXPrecentWordsMap, word, prevWord);
+						
 						// add word to map
-						firstXPrecentWordsMap.put(word, firstXPrecentWordsMap.get(word) == null ? 1 : firstXPrecentWordsMap.get(word)+1);
-						Output.writeConsoleWhenTrue(word + "-" + firstXPrecentWordsMap.get(word));
 						count++;
 					}
 					else
 					{
 						// passed x precent, start adding words to last set of words (validation)
 						xPrecentPasted = true;
-						lastXPrecentWordsMap.put(word, lastXPrecentWordsMap.get(word) == null ? 1 : lastXPrecentWordsMap.get(word)+1);
-						Output.writeConsoleWhenTrue("AfterXPrecent: " + word + "-" + lastXPrecentWordsMap.get(word));
+						AddWordToMap(lastXPrecentWordsMap, word, prevWord);
 					}
+					
+					prevWord = word;
 				}
 			}
 
 			index++;
 		}
-		
+
 		//After X precent, add all docs to the validation map (last set of words)
-		while(index<this.docsMapList.size()){
-			Map<String, Integer> currentDocMap = this.docsMapList.get(index++);
-			joinMaps(lastXPrecentWordsMap,currentDocMap);	
+		while(index < this.docsMapList.size())
+		{
+			Map<String, Map<String, Integer>> currentDocMap = this.docsMapList.get(index++);
+			joinMaps(lastXPrecentWordsMap, currentDocMap);	
 		}
 	}
 
@@ -183,19 +243,22 @@ public class DataClass {
 	/*
 	 * Returns the number of words in the map
 	 */
-	public static long wordsTotalAmount(Map<String, Integer> wordsCountMap)
+	public static long wordsTotalAmount(Map<String, Map<String, Integer>> mapTotalDocsWords)
 	{
-		int count=0;
+		int count = 0;
 
-		for(int value :  wordsCountMap.values())
+		for(Map<String, Integer> map :  mapTotalDocsWords.values())
 		{
-			count += value;
+			for (int value : map.values())
+			{
+				count += value;	
+			}
 		}
 
 		return count;
 	}
 
-	public Map<String, Integer> getMapTotalDocsWords() 
+	public Map<String, Map<String, Integer>> getMapTotalDocsWords() 
 	{
 		return mapTotalDocsWords;
 	}
@@ -208,11 +271,11 @@ public class DataClass {
 		return docsTopicList;
 	}
 
-	public List<Map<String, Integer>> getDocsList() {
+	public List<Map<String, Map<String, Integer>>> getDocsList() {
 		return docsMapList;
 	}
 
-	public void setDocsList(List<Map<String, Integer>> docsList) {
+	public void setDocsList(List<Map<String, Map<String, Integer>>> docsList) {
 		this.docsMapList = docsList;
 	}
 

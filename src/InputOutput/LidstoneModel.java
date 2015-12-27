@@ -6,14 +6,14 @@ import java.util.*;
 public class LidstoneModel 
 {
 	static String unseenWord = "unseen-word";
-
+/*
 	public static double CalcPLidstone(double lambda, Map<String, Integer> trainMap, String inputWord)
 	{
 		long eventsInTraining = DataClass.wordsTotalAmount(trainMap);
 
 		return CalcPLidstone(lambda, trainMap, eventsInTraining, inputWord);
 	}
-
+*/
 	/*
 	 * Returns Lidstone smoothing, by the formula shown in class
 	 */
@@ -27,17 +27,18 @@ public class LidstoneModel
 	/*
 	 * Returns Lidstone smoothing, by the formula shown in class
 	 */
+	/*
 	public static double CalcPLidstone(double lambda, Map<String, Integer> trainMap, int occurences)
 	{
 		long eventsInTraining = DataClass.wordsTotalAmount(trainMap);
 
 		return (occurences + lambda)/(eventsInTraining + lambda*Output.vocabulary_size); 
-	}
+	}*/
 
 	/*
 	 * Checks the sum of p words is 1
 	 */
-	public static void modelSanityCheck(double lambda, Map<String, Integer> trainMap)
+	/*public static void modelSanityCheck(double lambda, Map<String, Integer> trainMap)
 	{
 		long N0 = Output.vocabulary_size - trainMap.keySet().size();
 		long trainingSize = DataClass.wordsTotalAmount(trainMap);
@@ -65,4 +66,6 @@ public class LidstoneModel
 		}
 
 	}
+	
+	*/
 }
