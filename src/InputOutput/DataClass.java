@@ -217,7 +217,12 @@ public class DataClass {
 					else
 					{
 						// passed x precent, start adding words to last set of words (validation)
-						xPrecentPasted = true;
+						if (xPrecentPasted == false)
+						{
+							xPrecentPasted = true;
+							prevWord = FirstArticleWord;
+						}
+						
 						AddWordToMap(lastXPrecentWordsMap, word, prevWord);
 					}
 
@@ -272,19 +277,17 @@ public class DataClass {
 	}
 	public static void trainMapPrevWordCount(Map<String, Map<String, Integer>> lidstoneTrainMap)
 	{
-		for (String prevWord : lidstoneTrainMap.keySet())
+		for (String word : lidstoneTrainMap.keySet())
 		{
-			int count=0;
-
-			for (String word : lidstoneTrainMap.keySet())
+			for (String prevWord : lidstoneTrainMap.get(word).keySet())
 			{
-
-				long wordAfterPrevOccurences = lidstoneTrainMap.get(word) == null ? 0 : (lidstoneTrainMap.get(word).get(prevWord)==null ? 0 : lidstoneTrainMap.get(word).get(prevWord));
-				count += wordAfterPrevOccurences;
+				int prevWordOccurreneces = lidstoneTrainMap.get(word).get(prevWord);
+				
+				trainMapNotLastWordCount.put(prevWord, trainMapNotLastWordCount.get(prevWord) == null ? prevWordOccurreneces : trainMapNotLastWordCount.get(prevWord) + prevWordOccurreneces);
 			}
-			
-			trainMapNotLastWordCount.put(prevWord, count);
 		}
+		
+		trainMapNotLastWordCount.remove(FirstArticleWord);	
 	}
 
 	/*

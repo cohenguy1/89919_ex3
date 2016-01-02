@@ -45,6 +45,8 @@ public class Ex3 {
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
 			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
 			
+			BackOff.modelSanityCheck(0.001, lidstoneTrainMap);
+			
 			// Output 7
 			outputClass.writeOutput(DataClass.wordsTotalAmount(validationMap));
 
@@ -88,13 +90,13 @@ public class Ex3 {
 			ArrayList<Event> eventList = new ArrayList<Event>();
 			EventComparator eventComparator = new EventComparator();
 
-			double wordAlpha = BackOff.alphaCalculate(inputWord1, lambda, lidstoneTrainMap, trainingMapSize);
+			double inputWordAlpha = BackOff.CalculateAlpha(lambda, lidstoneTrainMap, trainingMapSize, inputWord1);
 			
 			for (String word : lidstoneTrainMap.keySet())
 			{
 				long wordAfterInputWordOcc = DataClass.getWordOccurrences(lidstoneTrainMap, word, inputWord1);
 
-				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, trainingMapSize, word, inputWord1, wordAlpha);
+				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, trainingMapSize, word, inputWord1, inputWordAlpha);
 				
 				eventList.add(new Event(word, wordAfterInputWordOcc, probability));
 			}
@@ -125,18 +127,20 @@ public class Ex3 {
 
 		long trainingSize = DataClass.wordsTotalAmount(lidstoneTrainMap);
 
+		BackOff.CalculateAlphaValues(bigramLambda, lidstoneTrainMap, trainingSize);
+		
 		for (String word : validationMap.keySet())
 		{
-			double wordAlpha = BackOff.alphaCalculate(word, bigramLambda, lidstoneTrainMap, trainingSize);
-			
 			// for each of the prev words of the word in the validation map
 			for (String prevWord : validationMap.get(word).keySet())
 			{
-				long wordAfterPrevOccurences = validationMap.get(word) == null ? 0 : (validationMap.get(word).get(prevWord) == null ? 0 : validationMap.get(word).get(prevWord));
-				if(!prevWord.equals(DataClass.FirstArticleWord) && wordAfterPrevOccurences > 0){
-					double pWord = BackOff.calcBigramBackOff(bigramLambda,
-							lidstoneTrainMap, trainingSize, word,
-							prevWord, wordAlpha);
+				long wordAfterPrevOccurences = DataClass.getWordOccurrences(validationMap, word, prevWord);
+				
+				if(wordAfterPrevOccurences > 0)
+				{
+					double pWord = BackOff.calcBigramBackOff(bigramLambda,	lidstoneTrainMap, trainingSize, word,
+							prevWord, BackOff.GetAlphaValue(prevWord));
+					
 					// adds the probability to the sum occurrences time (as the number of sequential occurrences in the validation map)
 					sumPWords += wordAfterPrevOccurences * Math.log(pWord)/Math.log(2);
 				}
