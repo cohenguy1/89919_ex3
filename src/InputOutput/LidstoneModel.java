@@ -27,13 +27,13 @@ public class LidstoneModel
 	
 	public static double CalcBigramPLidstone(double biLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, String word, String prevWord)
 	{
-		long prevWordOccurences = lidstoneTrainMap.get(prevWord) == null ? 0 : DataClass.wordsTotalAmountReg(lidstoneTrainMap.get(prevWord));
+		long prevWordNotLastOccurences = lidstoneTrainMap.get(prevWord) == null ? 0 : DataClass.trainMapNotLastWordCount.get(prevWord);
 //		long totalWordOccurences = lidstoneTrainMap.get(word) == null ? 0 : DataClass.wordsTotalAmountReg(lidstoneTrainMap.get(word));
 
 		long wordAfterPrevOccurences = lidstoneTrainMap.get(word) == null ? 0 : (lidstoneTrainMap.get(word).get(prevWord)==null ? 0 : lidstoneTrainMap.get(word).get(prevWord));
 
 		//return (wordAfterPrevOccurences + biLambda)/(totalWordOccurences + biLambda*prevWordOccurences); 
-		return (wordAfterPrevOccurences + biLambda)/(prevWordOccurences + biLambda*Output.vocabulary_size); 
+		return (wordAfterPrevOccurences + biLambda)/(prevWordNotLastOccurences + biLambda*Output.vocabulary_size); 
 
 	}
 
