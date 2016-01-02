@@ -107,7 +107,7 @@ public class BackOff
 
 			if (Math.abs(1 - sum) < epsilon)
 			{
-				System.out.println("BackOff is GOOD!");
+				Output.writeConsoleWhenTrue("BackOff is GOOD!");
 			}
 			else
 			{
