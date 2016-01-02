@@ -13,6 +13,7 @@ import java.util.TreeMap;
 
 public class DataClass {
 
+	public static String First_Article_Word = "begin-article";
 	private boolean skipLine = true;
 	
 	private List<Set<Topics>> docsTopicList;
@@ -85,10 +86,14 @@ public class DataClass {
 		Map<String, Map<String, Integer>> wordsMap = new TreeMap<String, Map<String, Integer>>();
 		
 		String[] words = inputLine.split(" ");
-		String prevWord = "begin-article";
-		
+		String prevWord = First_Article_Word;
+				
 		for(String word : words)
 		{
+//			if (prevWord.equals("begin-article")){
+//				prevWord = word;
+//				continue;
+//			}
 			AddWordToMap(wordsMap, word, prevWord);
 			
 			prevWord = word;
@@ -253,6 +258,18 @@ public class DataClass {
 			{
 				count += value;	
 			}
+		}
+
+		return count;
+	}
+	
+	public static long wordsTotalAmountReg(Map<String, Integer> wordsCountMap)
+	{
+		int count=0;
+
+		for(int value :  wordsCountMap.values())
+		{
+			count += value;
 		}
 
 		return count;

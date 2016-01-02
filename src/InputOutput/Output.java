@@ -10,7 +10,8 @@ public class Output {
 	
 	public static boolean writeToConsole = false;
 
-	public static String folderPath = "";
+	//TODO: delete path!
+	public static String folderPath = "C:\\devl\\Java\\89919_ex3\\src\\";
 
 	public int countOutput = 1;
 	public String outputFile;

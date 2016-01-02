@@ -3,8 +3,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import InputOutput.BackOff;
 import InputOutput.DataClass;
-import InputOutput.LidstoneModel;
 import InputOutput.Output;
 
 public class Ex3 {
@@ -51,28 +51,43 @@ public class Ex3 {
 			// Output 9
 			outputClass.writeOutput(lidstoneTrainMap.keySet().size()); 
 
-			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord1));
-			
 			// Output 10
-			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord2, inputWord1));
+			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord1));
 
 			// Output 11
+			outputClass.writeOutput(getNumberOfOccurences(lidstoneTrainMap, inputWord2, inputWord1));
 
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-/*			
+			// Output 12
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.0001, lidstoneTrainMap, validationMap));
+
+			// Output 13
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.001, lidstoneTrainMap, validationMap));
+
+			// Output 14
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.1, lidstoneTrainMap, validationMap));
+
+			double bestBigramLambda = getBestLambda(lidstoneTrainMap, validationMap);
+
+			// Output 15
+			outputClass.writeOutput(bestBigramLambda);
+
+			// Output 26
+			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, validationMap));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			/*			
 			outputClass.writeOutput(calcPMle(lidstoneTrainMap, inputWord));
 
 			// Output 13
@@ -159,59 +174,48 @@ public class Ex3 {
 		{
 			return 0;
 		}
-		
+
 		int count = 0;
 		for (int wordCount : map.get(word).values())
 		{
 			count += wordCount;
 		}
-		
+
 		return count; 
 	}
-	
+
 	private static int getNumberOfOccurences(Map<String, Map<String, Integer>> map, String word1, String word2)
 	{
 		if (map.get(word1) == null)
 		{
 			return 0;
 		}
-		
+
 		return map.get(word1).get(word2) == null ? 0 : map.get(word1).get(word2); 
 	}
 
-	/*
-	 * Returns model perplexity
-	 
-	private static double calculatePerplexityByLidstone(double lambda, Map<String, Integer> trainingMap, Map<String, Integer> validationMap) 
+
+	//Returns model perplexity
+
+	private static double calculatePerplexityByBackOff(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, Map<String, Map<String, Integer>> validationMap) 
 	{		
 		double sumPWords = 0;
 
-		long trainingSize = DataClass.wordsTotalAmount(trainingMap);
+		long trainingSize = DataClass.wordsTotalAmount(lidstoneTrainMap);
 
 		for (String word : validationMap.keySet())
 		{
-			double pWord = LidstoneModel.CalcPLidstone(lambda, trainingMap, trainingSize, word);
-			
-			// adds the probability to the sum occurrences time (as the number of occurrences in the validation map)
-			sumPWords += validationMap.get(word) * Math.log(pWord)/Math.log(2);
-		}
-
-		long validationWordsSize = DataClass.wordsTotalAmount(validationMap);
-		
-		double perplexity = Math.pow(2,(-1.0/validationWordsSize) * sumPWords); 
-		return perplexity;
-	}
-
-	private static double calculatePerplexityByHeldOut(Map<String, Integer> heldOutTrainMap, Map<String, Integer> heldOutMap, Map<String, Integer> validationMap)
-	{
-		double sumPWords = 0;
-
-		for (String word : validationMap.keySet())
-		{
-			double pWord = HeldOutModel.CalcPHeldOut(heldOutTrainMap, heldOutMap, word);
-			
-			// adds the probability to the sum occurrences time (as the number of occurrences in the validation map)
-			sumPWords += validationMap.get(word) * Math.log(pWord)/Math.log(2);
+			for (String prevWord : validationMap.get(word).keySet()){
+				
+				long wordAfterPrevOccurences = validationMap.get(word) == null ? 0 : (validationMap.get(word).get(prevWord)==null ? 0 : validationMap.get(word).get(prevWord));
+				if(!prevWord.equals(DataClass.First_Article_Word) && wordAfterPrevOccurences > 0){
+					double pWord = BackOff.calcBigramBackOff(bigramLambda,
+							lidstoneTrainMap, trainingSize, word,
+							prevWord);
+					// adds the probability to the sum occurrences time (as the number of sequental occurrences in the validation map)
+					sumPWords += wordAfterPrevOccurences * Math.log(pWord)/Math.log(2);
+				}
+			}
 		}
 
 		long validationWordsSize = DataClass.wordsTotalAmount(validationMap);
@@ -220,18 +224,40 @@ public class Ex3 {
 		return perplexity;
 	}
 
-	private static double getBestLambda(Map<String, Integer> trainingMap, Map<String, Integer> validationMap)
+
+
+
+	//	private static double calculatePerplexityByHeldOut(Map<String, Integer> heldOutTrainMap, Map<String, Integer> heldOutMap, Map<String, Integer> validationMap)
+	//	{
+	//		double sumPWords = 0;
+	//
+	//		for (String word : validationMap.keySet())
+	//		{
+	//			double pWord = HeldOutModel.CalcPHeldOut(heldOutTrainMap, heldOutMap, word);
+	//
+	//			// adds the probability to the sum occurrences time (as the number of occurrences in the validation map)
+	//			sumPWords += validationMap.get(word) * Math.log(pWord)/Math.log(2);
+	//		}
+	//
+	//		long validationWordsSize = DataClass.wordsTotalAmount(validationMap);
+	//
+	//		double perplexity = Math.pow(2,(-1.0/validationWordsSize) * sumPWords); 
+	//		return perplexity;
+	//	}
+
+	private static double getBestLambda(Map<String, Map<String, Integer>> lidstoneTrainMap, Map<String, Map<String, Integer>> validationMap)
 	{
 		int bestLambdaIndex = 0;
-		double bestPerplexityValue = calculatePerplexityByLidstone(0, trainingMap, validationMap);
+		double bestPerplexityValue = calculatePerplexityByBackOff(0, lidstoneTrainMap, validationMap);
 
 		double perplexity;
 
-		// iterate over the lambdas from 0.1 to 2.0 (1 to 200 divided by 100, for accuracies) 
+		// iterate over the lambdas from 0.0001 to 0.02 (1 to 200 divided by 10,000, for accuracies) 
+		double DIVIDE_LAMDA = 10000.0;
 		for (int lambdaIndex = 1; lambdaIndex <= 200; lambdaIndex++)
 		{
 			// calculate the perplexity by this lambda
-			perplexity = calculatePerplexityByLidstone(lambdaIndex/100.0, trainingMap, validationMap);
+			perplexity = calculatePerplexityByBackOff(lambdaIndex/DIVIDE_LAMDA, lidstoneTrainMap, validationMap);
 
 			// compare to the best lambda perplexity value thus far
 			if (perplexity < bestPerplexityValue)
@@ -242,7 +268,7 @@ public class Ex3 {
 		}
 
 		// return the best lambda
-		return bestLambdaIndex/100.0;
+		return bestLambdaIndex/DIVIDE_LAMDA;
 	}
-	*/
+
 }
