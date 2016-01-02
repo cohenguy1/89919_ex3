@@ -1,6 +1,7 @@
 package InputOutput;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class BackOff 
@@ -15,6 +16,11 @@ public class BackOff
 			Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize,
 			String word, String prevWord, double prevWordAlphaValue) 
 	{
+		if (DataClass.getWordOccurrences(lidstoneTrainMap, prevWord) == 0)
+		{
+			return LidstoneModel.CalcUnigramPLidstone(UNIGRAM_LAMDA, lidstoneTrainMap, trainingSize, word);
+		}
+		
 		//check if word appears after prevWord - and use lidstone bigram or unigram
 		long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
 		double pWord;
@@ -41,11 +47,11 @@ public class BackOff
 		return AlphaValues.get(word) == null ? 1 : AlphaValues.get(word);
 	}
 
-	public static void CalculateAlphaValues(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize)
+	public static void CalculateAlphaValues(double bigramLambda, Set<String> wordToCalcFor, Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize)
 	{
 		AlphaValues = new TreeMap<String, Double>();
 
-		for (String prevWord : lidstoneTrainMap.keySet())
+		for (String prevWord : wordToCalcFor)
 		{
 			AlphaValues.put(prevWord, CalculateAlpha(bigramLambda, lidstoneTrainMap, trainingSize, prevWord));
 		}
@@ -89,7 +95,7 @@ public class BackOff
 		// Prevent inaccuracies by java double calculations
 		double epsilon = 0.000000000000002;
 
-		CalculateAlphaValues(bigramLambda, trainMap, trainingSize);
+		CalculateAlphaValues(bigramLambda, trainMap.keySet(), trainMap, trainingSize);
 
 		for(String word : trainMap.keySet())
 		{

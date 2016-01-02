@@ -45,7 +45,7 @@ public class Ex3 {
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
 			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
 			
-			BackOff.modelSanityCheck(0.001, lidstoneTrainMap);
+			//BackOff.modelSanityCheck(0.001, lidstoneTrainMap);
 			
 			// Output 7
 			outputClass.writeOutput(DataClass.wordsTotalAmount(validationMap));
@@ -127,7 +127,7 @@ public class Ex3 {
 
 		long trainingSize = DataClass.wordsTotalAmount(lidstoneTrainMap);
 
-		BackOff.CalculateAlphaValues(bigramLambda, lidstoneTrainMap, trainingSize);
+		BackOff.CalculateAlphaValues(bigramLambda, validationMap.keySet(), lidstoneTrainMap, trainingSize);
 		
 		for (String word : validationMap.keySet())
 		{
@@ -136,14 +136,14 @@ public class Ex3 {
 			{
 				long wordAfterPrevOccurences = DataClass.getWordOccurrences(validationMap, word, prevWord);
 				
-				if(wordAfterPrevOccurences > 0)
-				{
+				//if(wordAfterPrevOccurences > 0)
+				//{
 					double pWord = BackOff.calcBigramBackOff(bigramLambda,	lidstoneTrainMap, trainingSize, word,
 							prevWord, BackOff.GetAlphaValue(prevWord));
 					
 					// adds the probability to the sum occurrences time (as the number of sequential occurrences in the validation map)
 					sumPWords += wordAfterPrevOccurences * Math.log(pWord)/Math.log(2);
-				}
+				//}
 			}
 		}
 
