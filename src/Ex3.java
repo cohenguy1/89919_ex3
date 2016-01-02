@@ -145,14 +145,14 @@ public class Ex3 {
 
 	private static double getBestLambda(Map<String, Map<String, Integer>> lidstoneTrainMap, Map<String, Map<String, Integer>> validationMap)
 	{
-		int bestLambdaIndex = 0;
-		double bestPerplexityValue = calculatePerplexityByBackOff(0, lidstoneTrainMap, validationMap);
+		double bestLambdaIndex = 0.0001;
+		double bestPerplexityValue = calculatePerplexityByBackOff(bestLambdaIndex, lidstoneTrainMap, validationMap);
 
 		double perplexity;
 
 		// iterate over the lambdas from 0.0001 to 0.02 (1 to 200 divided by 10,000, for accuracies) 
 		double DIVIDE_LAMDA = 10000.0;
-		for (int lambdaIndex = 1; lambdaIndex <= 200; lambdaIndex++)
+		for (int lambdaIndex = 2; lambdaIndex <= 200; lambdaIndex++)
 		{
 			// calculate the perplexity by this lambda
 			perplexity = calculatePerplexityByBackOff(lambdaIndex/DIVIDE_LAMDA, lidstoneTrainMap, validationMap);
