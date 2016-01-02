@@ -78,6 +78,7 @@ public class Ex3 {
 			// Output 16
 			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, validationMap));
 
+			double lambda = 0.001;
 			BackOff.modelSanityCheck(lambda, lidstoneTrainMap);
 
 			DataClass testData = new DataClass();
