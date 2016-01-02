@@ -13,7 +13,7 @@ import java.util.TreeMap;
 
 public class DataClass {
 
-	public static String First_Article_Word = "begin-article";
+	public static String FirstArticleWord = "begin-article";
 	private boolean skipLine = true;
 	
 	private List<Set<Topics>> docsTopicList;
@@ -86,14 +86,10 @@ public class DataClass {
 		Map<String, Map<String, Integer>> wordsMap = new TreeMap<String, Map<String, Integer>>();
 		
 		String[] words = inputLine.split(" ");
-		String prevWord = First_Article_Word;
+		String prevWord = FirstArticleWord;
 				
 		for(String word : words)
 		{
-//			if (prevWord.equals("begin-article")){
-//				prevWord = word;
-//				continue;
-//			}
 			AddWordToMap(wordsMap, word, prevWord);
 			
 			prevWord = word;
@@ -132,8 +128,6 @@ public class DataClass {
 			joinMaps(wordsCountMap,docMap);		
 			count++;
 
-			System.out.println(wordsTotalAmount(docMap));
-			System.out.println(wordsTotalAmount(wordsCountMap));
 			System.out.println("Precentage " + (double)count/docsList.size() * 100); 
 		}
 		
@@ -207,7 +201,7 @@ public class DataClass {
 				String currentDocString = this.docsStringList.get(index);
 				String[] words = currentDocString.split(" ");
 				
-				String prevWord = "begin-article";
+				String prevWord = FirstArticleWord;
 				
 				for(String word : words)
 				{					
@@ -275,6 +269,30 @@ public class DataClass {
 		return count;
 	}
 
+	/*
+	 * Gets the Total number of occurrences of word in map
+	 */
+	public static long getWordOccurrences(Map<String, Map<String, Integer>> map, String word)
+	{
+		if (map.get(word) == null)
+		{
+			return 0;
+		}
+		
+		// sum all occurrences of the word (by the prev words set)
+		return wordsTotalAmountReg(map.get(word));
+	}
+	
+	public static int getWordOccurrences(Map<String, Map<String, Integer>> map, String word, String prevWord)
+	{
+		if (map.get(word) == null)
+		{
+			return 0;
+		}
+
+		return map.get(word).get(prevWord) == null ? 0 : map.get(word).get(prevWord); 
+	}
+	
 	public Map<String, Map<String, Integer>> getMapTotalDocsWords() 
 	{
 		return mapTotalDocsWords;
