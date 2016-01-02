@@ -1,5 +1,7 @@
 package InputOutput;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class BackOff 
@@ -38,24 +40,43 @@ public class BackOff
 	{
 		double sumPWordPrevWord = 1;
 		double sumPWords = 1;
-		
-//		long tempCount =0;
 
+//		long tempCount = 0;
+
+//		List<String> tempList = new ArrayList<String>();
+//		//		tempList.add("referring");
+//		//		tempList.add("domestic");
+//		//		tempList.add("tokyo");
+//		//		tempList.add("lawson");
+//		//		tempList.add("soybean");
+//		//		tempList.add("ec");
+//		//		tempList.add("residual");
+//		//		tempList.add("yeutter");
+//		//		tempList.add("begin-article");
+//		if (prevWord.equals("said")){
+////			System.out.println("hi");
+//		}
+//		int mycount = 0;
 		for (String word : lidstoneTrainMap.keySet())
 		{
+
 			long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
-			
-//			tempCount+=wordAfterPrevOccurences;
-			if (wordAfterPrevOccurences > 0) 
-			{	
+			if (wordAfterPrevOccurences > 0 ) {
+//				mycount++;
+//				tempCount+=wordAfterPrevOccurences;
+
+//				System.out.println(mycount+" - " + word + " - " + wordAfterPrevOccurences);
+
 				sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
 				sumPWords -= LidstoneModel.CalcUnigramPLidstone(UNIGRAM_LAMDA, lidstoneTrainMap, trainingSize, word);
 			}
 		}	
-		
+
 		if (sumPWordPrevWord/sumPWords <= 0)
-			System.out.println("STOP!!!!!");
-		
+			System.out.println("alpha zero- "+prevWord+" biLamda-"+bigramLambda);
+//		if (tempCount != (lidstoneTrainMap.get(prevWord) == null ? 0 : DataClass.wordsTotalAmountRegu(lidstoneTrainMap,prevWord)))
+//			System.out.println("numSTOP!!!!!"+prevWord);
+
 		return sumPWordPrevWord/sumPWords;
 	}
 	
