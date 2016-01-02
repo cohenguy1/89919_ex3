@@ -43,7 +43,8 @@ public class Ex3 {
 			Map<String, Map<String, Integer>> lidstoneTrainMap = new TreeMap<String, Map<String, Integer>>();
 			Map<String, Map<String, Integer>> validationMap  = new TreeMap<String, Map<String, Integer>>();
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
-
+			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
+			
 			// Output 7
 			outputClass.writeOutput(DataClass.wordsTotalAmount(validationMap));
 
@@ -86,11 +87,14 @@ public class Ex3 {
 
 			ArrayList<Event> eventList = new ArrayList<Event>();
 			EventComparator eventComparator = new EventComparator();
+
+			double wordAlpha = BackOff.alphaCalculate(inputWord1, lambda, lidstoneTrainMap, trainingMapSize);
 			
 			for (String word : lidstoneTrainMap.keySet())
 			{
 				long wordAfterInputWordOcc = DataClass.getWordOccurrences(lidstoneTrainMap, word, inputWord1);
-				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, trainingMapSize, word, inputWord1);
+
+				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, trainingMapSize, word, inputWord1, wordAlpha);
 				
 				eventList.add(new Event(word, wordAfterInputWordOcc, probability));
 			}
@@ -123,6 +127,8 @@ public class Ex3 {
 
 		for (String word : validationMap.keySet())
 		{
+			double wordAlpha = BackOff.alphaCalculate(word, bigramLambda, lidstoneTrainMap, trainingSize);
+			
 			// for each of the prev words of the word in the validation map
 			for (String prevWord : validationMap.get(word).keySet())
 			{
@@ -130,7 +136,7 @@ public class Ex3 {
 				if(!prevWord.equals(DataClass.FirstArticleWord) && wordAfterPrevOccurences > 0){
 					double pWord = BackOff.calcBigramBackOff(bigramLambda,
 							lidstoneTrainMap, trainingSize, word,
-							prevWord);
+							prevWord, wordAlpha);
 					// adds the probability to the sum occurrences time (as the number of sequential occurrences in the validation map)
 					sumPWords += wordAfterPrevOccurences * Math.log(pWord)/Math.log(2);
 				}
