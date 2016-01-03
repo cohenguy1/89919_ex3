@@ -1,6 +1,7 @@
 /* Ido Cohen	Guy Cohen	203516992	304840283 */
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -88,7 +89,6 @@ public class Ex3 {
 			testData.readInputFile(test_inputFile);
 
 			ArrayList<Event> eventList = new ArrayList<Event>();
-			EventComparator eventComparator = new EventComparator();
 
 			double inputWordAlpha = BackOff.CalculateAlpha(lambda, lidstoneTrainMap, trainingMapSize, inputWord1);
 			
@@ -101,7 +101,7 @@ public class Ex3 {
 				eventList.add(new Event(word, wordAfterInputWordOcc, probability));
 			}
 			
-			eventList.sort(eventComparator);
+			Collections.sort(eventList, new EventComparator());
 
 			// Output 29
 			outputClass.writeOutput("");
@@ -109,7 +109,7 @@ public class Ex3 {
 			for (int i = 0; i < eventList.size(); i++)
 			{
 				Event event = eventList.get(i);
-				outputClass.writeOutputFile("\n"+ i + "\t" + event.word + "\t" + event.occurrencesAfterInputWord + "\t" + event.probability + "\n");
+				outputClass.writeOutputFile("\n"+ i + "\t" + event.word + "\t" + event.occurrencesAfterInputWord + "\t" + event.probability);
 			}
 		} 
 		catch (IOException e) 
