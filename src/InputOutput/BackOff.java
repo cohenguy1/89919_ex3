@@ -18,7 +18,7 @@ public class BackOff
 	{
 		if (DataClass.getWordOccurrences(lidstoneTrainMap, prevWord) == 0)
 		{
-			return DataClass.trainMapLidstonUnigram.get(word)==null ? DataClass.trainMapLidstonUnigram.get(DataClass.UNSEEN_WORD) : DataClass.trainMapLidstonUnigram.get(word);
+			return LidstoneModel.getUnigramPLidstone(word);
 		}
 		
 		//check if word appears after prevWord - and use lidstone bigram or unigram
@@ -33,7 +33,7 @@ public class BackOff
 		}
 		else 
 		{
-			pWord = prevWordAlphaValue * (DataClass.trainMapLidstonUnigram.get(word)==null ? DataClass.trainMapLidstonUnigram.get(DataClass.UNSEEN_WORD) : DataClass.trainMapLidstonUnigram.get(word));
+			pWord = prevWordAlphaValue * LidstoneModel.getUnigramPLidstone(word);
 
 			if (pWord <= 0)
 				System.out.println("STOP!");
@@ -74,7 +74,7 @@ public class BackOff
 			if (wordAfterPrevOccurences > 0) 
 			{
 				sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
-				sumPWords -= LidstoneModel.CalcUnigramPLidstone(UNIGRAM_LAMDA, lidstoneTrainMap, trainingSize, word);
+				sumPWords -= LidstoneModel.getUnigramPLidstone(word);
 			}
 		}	
 

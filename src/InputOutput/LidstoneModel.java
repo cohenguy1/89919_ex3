@@ -23,4 +23,10 @@ public class LidstoneModel
 
 		return (wordAfterPrevOccurences + lambda)/(prevWordNotLastOccurences + lambda * Output.vocabulary_size); 
 	}
+
+
+	public static double getUnigramPLidstone(String word) 
+	{
+		return (DataClass.trainMapLidstonUnigram.get(word) == null ? DataClass.trainMapLidstonUnigram.get(DataClass.UNSEEN_WORD) : DataClass.trainMapLidstonUnigram.get(word));
+	}
 }
