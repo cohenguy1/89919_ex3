@@ -8,11 +8,9 @@ import java.util.TreeMap;
 import InputOutput.BackOff;
 import InputOutput.DataClass;
 import InputOutput.Output;
-import InputOutput.Topics;
 
 public class Ex3 {
 
-	static String unseenWord = "unseen-word";
 
 	public static void main(String[] args) {
 
@@ -44,7 +42,6 @@ public class Ex3 {
 			Map<String, Map<String, Integer>> lidstoneTrainMap = new TreeMap<String, Map<String, Integer>>();
 			Map<String, Map<String, Integer>> validationMap  = new TreeMap<String, Map<String, Integer>>();
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
-			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
 			
 			//BackOff.modelSanityCheck(0.001, lidstoneTrainMap);
 			
@@ -52,6 +49,8 @@ public class Ex3 {
 			outputClass.writeOutput(DataClass.wordsTotalAmount(validationMap));
 
 			long trainingMapSize = DataClass.wordsTotalAmount(lidstoneTrainMap);
+			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
+			DataClass.trainMapCalcLidstonUnigram(lidstoneTrainMap,trainingMapSize);
 			
 			// Output 8
 			outputClass.writeOutput(trainingMapSize);

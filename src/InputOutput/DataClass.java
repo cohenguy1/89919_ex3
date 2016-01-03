@@ -14,6 +14,7 @@ import java.util.TreeMap;
 
 public class DataClass {
 
+	public static String UNSEEN_WORD = "unseen-word";
 	public static String FirstArticleWord = "begin-article";
 	private boolean skipLine = true;
 
@@ -24,7 +25,9 @@ public class DataClass {
 
 	private Map<String, Map<String, Integer>> mapTotalDocsWords;
 	private long totalWordsInDocs;
+	
 	public static Map<String, Integer> trainMapNotLastWordCount = new HashMap<String, Integer>();
+	public static Map<String, Double> trainMapLidstonUnigram = new HashMap<String, Double>();
 
 
 	public DataClass(){
@@ -288,6 +291,17 @@ public class DataClass {
 		}
 		
 		trainMapNotLastWordCount.remove(FirstArticleWord);	
+	}
+	
+	public static void trainMapCalcLidstonUnigram(Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingMapSize)
+	{
+		for (String word : lidstoneTrainMap.keySet())
+		{
+			trainMapLidstonUnigram.put(word, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, word));
+		}
+		trainMapLidstonUnigram.put(UNSEEN_WORD, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, UNSEEN_WORD));
+
+		trainMapLidstonUnigram.remove(FirstArticleWord);	
 	}
 
 	/*
