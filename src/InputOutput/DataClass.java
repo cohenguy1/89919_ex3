@@ -21,9 +21,12 @@ public class DataClass {
 	private List<Set<Topics>> docsTopicList;
 
 	private List<Map<String,Map<String, Integer>>> docsMapList;
+	private List<Map<String,Map<String, Integer>>> docsSequentialList;
+
 	private List<String> docsStringList;
 
 	private Map<String, Map<String, Integer>> mapTotalDocsWords;
+	public static Map<String, Map<String, Integer>> mapTotalSequentialDocsWords;
 	private long totalWordsInDocs;
 	
 	public static Map<String, Integer> trainMapNotLastWordCount = new HashMap<String, Integer>();
@@ -33,6 +36,7 @@ public class DataClass {
 	public DataClass(){
 		this.docsTopicList = new ArrayList<Set<Topics>>();
 		this.docsMapList = new ArrayList<Map<String,Map<String, Integer>>>();
+		this.docsSequentialList = new ArrayList<Map<String,Map<String, Integer>>>();
 		this.docsStringList = new ArrayList<String>();
 	}
 
@@ -55,7 +59,8 @@ public class DataClass {
 			skipEmptyLine(bufferedReader);
 
 			String docTextLine = bufferedReader.readLine();
-			docsMapList.add(mapWordCount(docTextLine));
+			mapWordCount(docTextLine);
+			
 			docsStringList.add(docTextLine);
 
 			skipEmptyLine(bufferedReader);
@@ -63,7 +68,8 @@ public class DataClass {
 		}
 		fileReader.close();
 
-		mapTotalDocsWordCount();
+		mapTotalDocsWords = mapTotalDocsWordCount(this.docsMapList);
+		mapTotalSequentialDocsWords = mapTotalDocsWordCount(this.docsSequentialList);
 		totalWordsInDocs = wordsTotalAmount(mapTotalDocsWords);
 	}
 
@@ -86,9 +92,10 @@ public class DataClass {
 	/*
 	 * Adds each word of the line read to the word mapping 
 	 */
-	private Map<String, Map<String, Integer>> mapWordCount(String inputLine) 
+	private void mapWordCount(String inputLine) 
 	{
 		Map<String, Map<String, Integer>> wordsMap = new TreeMap<String, Map<String, Integer>>();
+		Map<String, Map<String, Integer>> sequentialMap = new TreeMap<String, Map<String, Integer>>();
 
 		String[] words = inputLine.split(" ");
 		String prevWord = FirstArticleWord;
@@ -96,18 +103,25 @@ public class DataClass {
 		for(String word : words)
 		{
 			AddWordToMap(wordsMap, word, prevWord);
+			AddToSequentialMap(sequentialMap, word, prevWord);
 
 			prevWord = word;
 		}
 
-		System.out.println(wordsTotalAmount(wordsMap));
+		docsMapList.add(wordsMap);
+		docsSequentialList.add(sequentialMap);
 
-		return wordsMap;
+	}
+
+	private void AddToSequentialMap(Map<String, Map<String, Integer>> prevWordsMap,
+			String word, String prevWord) {
+		AddWordToMap(prevWordsMap, prevWord, word);	
 	}
 
 	private void AddWordToMap(Map<String, Map<String, Integer>> wordsMap, String word, String prevWord)
 	{
 		word = word.toLowerCase();
+		prevWord = prevWord.toLowerCase();
 
 		Map<String, Integer> wordMap = wordsMap.get(word);
 
@@ -244,9 +258,9 @@ public class DataClass {
 		}
 	}
 
-	private void mapTotalDocsWordCount() {
+	private Map<String, Map<String, Integer>> mapTotalDocsWordCount(List<Map<String, Map<String, Integer>>> docsMapList) {
 
-		mapTotalDocsWords = listMapToMapTotalWordCount(this.docsMapList);
+		return listMapToMapTotalWordCount(docsMapList);
 	}
 
 	/*

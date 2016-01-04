@@ -60,15 +60,17 @@ public class BackOff
 	public static double CalculateAlpha(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize,
 			String prevWord)
 	{
-		if (lidstoneTrainMap.get(prevWord) == null)
+		Map<String, Integer> prevWordSequential = DataClass.mapTotalSequentialDocsWords.get(prevWord);
+		if (lidstoneTrainMap.get(prevWord) == null || prevWordSequential ==null)
 		{
+//			System.out.println(prevWord+","+(lidstoneTrainMap.get(prevWord) == null)+","+(prevWordSequential ==null));
 			return 1;
 		}
 
 		double sumPWordPrevWord = 1;
 		double sumPWords = 1;
-
-		for (String word : lidstoneTrainMap.keySet())
+		
+		for(String word : prevWordSequential.keySet())
 		{
 			long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
 			if (wordAfterPrevOccurences > 0) 
