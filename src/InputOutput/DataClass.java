@@ -29,6 +29,8 @@ public class DataClass {
 	public static Map<String, Map<String, Integer>> mapTotalSequentialDocsWords;
 	private long totalWordsInDocs;
 	
+	public static Map<String, Long> trainMapWordCount = new HashMap<String, Long>();
+	
 	public static Map<String, Integer> trainMapNotLastWordCount = new HashMap<String, Integer>();
 	public static Map<String, Double> trainMapLidstonUnigram = new HashMap<String, Double>();
 
@@ -307,12 +309,22 @@ public class DataClass {
 		trainMapNotLastWordCount.remove(FirstArticleWord);	
 	}
 	
+	public static void CountWordOccurrencesInTrainMap(Map<String, Map<String, Integer>> lidstoneTrainMap)
+	{
+		for (String word : lidstoneTrainMap.keySet())
+		{
+			// sum all occurrences of the word (by the prev words set)
+			trainMapWordCount.put(word, wordsTotalAmountReg(lidstoneTrainMap.get(word)));
+		}
+	}
+	
 	public static void trainMapCalcLidstonUnigram(Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingMapSize)
 	{
 		for (String word : lidstoneTrainMap.keySet())
 		{
 			trainMapLidstonUnigram.put(word, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, word));
 		}
+		
 		trainMapLidstonUnigram.put(UNSEEN_WORD, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, UNSEEN_WORD));
 
 		trainMapLidstonUnigram.remove(FirstArticleWord);	
@@ -323,13 +335,12 @@ public class DataClass {
 	 */
 	public static long getWordOccurrences(Map<String, Map<String, Integer>> map, String word)
 	{
-		if (map.get(word) == null)
+		if (trainMapWordCount.get(word) == null)
 		{
 			return 0;
 		}
 		
-		// sum all occurrences of the word (by the prev words set)
-		return wordsTotalAmountReg(map.get(word));
+		return trainMapWordCount.get(word);
 	}
 	
 	public static int getWordOccurrences(Map<String, Map<String, Integer>> map, String word, String prevWord)
