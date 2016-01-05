@@ -1,4 +1,4 @@
-
+/* Ido Cohen	Guy Cohen	203516992	304840283 */
 public class Event 
 { 
 	public final String word; 

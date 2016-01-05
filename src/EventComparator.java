@@ -1,3 +1,4 @@
+/* Ido Cohen	Guy Cohen	203516992	304840283 */
 import java.util.Comparator;
 
 public class EventComparator implements Comparator<Event>
