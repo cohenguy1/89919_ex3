@@ -147,9 +147,7 @@ public class DataClass {
 		Map<String, Map<String, Integer>> wordsCountMap = new TreeMap<String, Map<String, Integer>>();
 		for(Map<String, Map<String, Integer>> docMap : docsList){
 			joinMaps(wordsCountMap,docMap);		
-			count++;
-
-			System.out.println("Precentage " + (double)count/docsList.size() * 100); 
+			count++; 
 		}
 
 		return wordsCountMap;
@@ -305,8 +303,6 @@ public class DataClass {
 				trainMapNotLastWordCount.put(prevWord, trainMapNotLastWordCount.get(prevWord) == null ? prevWordOccurreneces : trainMapNotLastWordCount.get(prevWord) + prevWordOccurreneces);
 			}
 		}
-		
-		trainMapNotLastWordCount.remove(FirstArticleWord);	
 	}
 	
 	public static void CountWordOccurrencesInTrainMap(Map<String, Map<String, Integer>> lidstoneTrainMap)

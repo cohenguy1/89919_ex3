@@ -16,11 +16,6 @@ public class BackOff
 			Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize,
 			String word, String prevWord, double prevWordAlphaValue) 
 	{
-		if (DataClass.getWordOccurrences(lidstoneTrainMap, prevWord) == 0)
-		{
-			return LidstoneModel.getUnigramPLidstone(word);
-		}
-		
 		//check if word appears after prevWord - and use lidstone bigram or unigram
 		long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
 		double pWord;
@@ -61,9 +56,9 @@ public class BackOff
 			String prevWord)
 	{
 		Map<String, Integer> prevWordSequential = DataClass.mapTotalSequentialDocsWords.get(prevWord);
-		if (lidstoneTrainMap.get(prevWord) == null || prevWordSequential ==null)
+		
+		if (lidstoneTrainMap.get(prevWord) == null || prevWordSequential == null)
 		{
-//			System.out.println(prevWord+","+(lidstoneTrainMap.get(prevWord) == null)+","+(prevWordSequential ==null));
 			return 1;
 		}
 
@@ -117,6 +112,34 @@ public class BackOff
 			{
 				System.out.println("BackOff is BAD. Value: " + sum);
 			}
+		}
+	}
+	
+	public static void modelSanityCheck2(Map<String, Map<String, Integer>> trainMap)
+	{		
+		long N0 = Output.vocabulary_size - trainMap.keySet().size();
+
+		// Prevent inaccuracies by java double calculations
+		double epsilon = 0.000000000000002;
+
+		double sum = 0;
+		
+		// Contribution of all words that don't appear in the training set (unseen events)
+		sum += N0 * LidstoneModel.getUnigramPLidstone("UNSEEN_WORD");
+		
+		for(String word : trainMap.keySet())
+		{
+			sum += LidstoneModel.getUnigramPLidstone(word);
+		}
+		
+
+		if (Math.abs(1 - sum) < epsilon)
+		{
+			Output.writeConsoleWhenTrue("BackOff is GOOD!");
+		}
+		else
+		{
+			System.out.println("BackOff is BAD. Value: " + sum);
 		}
 	}
 }
