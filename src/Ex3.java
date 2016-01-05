@@ -80,7 +80,7 @@ public class Ex3
 			double bestBigramLambda = getBestLambda(lidstoneTrainMap, validationMap, validationSize);
 
 			// Output 15
-			outputClass.writeOutput(String.format("%.5f", bestBigramLambda));
+			outputClass.writeOutput(String.format("%.4f", bestBigramLambda));
 
 			// Output 16
 			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, validationMap, validationSize));
