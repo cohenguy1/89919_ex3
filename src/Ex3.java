@@ -15,8 +15,8 @@ public class Ex3
 {
 	public static long TrainingSize;
 
-	public static void main(String[] args) {
-
+	public static void main(String[] args) 
+	{
 		String devl_inputFile = args[0];
 		String test_inputFile = args[1];
 		String inputWord1 = args[2];
@@ -90,7 +90,10 @@ public class Ex3
 
 			DataClass testData = new DataClass();
 			testData.readInputFile(test_inputFile);
-
+			
+			long testSize = DataClass.wordsTotalAmount(testData.getMapTotalDocsWords());
+			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, testData.getMapTotalDocsWords(), testSize));
+			
 			ArrayList<Event> eventList = new ArrayList<Event>();
 
 			double inputWordAlpha = BackOff.CalculateAlpha(lambda, lidstoneTrainMap, TrainingSize, inputWord1);
@@ -112,8 +115,13 @@ public class Ex3
 			for (int i = 0; i < eventList.size(); i++)
 			{
 				Event event = eventList.get(i);
-				outputClass.writeOutputFile("\n"+ i + "\t" + event.word + "\t" + event.occurrencesAfterInputWord + "\t" + event.probability);
+				outputClass.writeOutputFile("\n" + (i + 1) + "\t" + event.word + "\t" + event.occurrencesAfterInputWord + "\t" + event.probability);
 			}
+			
+			long unseenEventCount = Output.vocabulary_size - eventList.size();
+			String unseenEvent = "UNSEEN_EVENT";
+			double unseenEventProbability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, TrainingSize, unseenEvent, inputWord1, inputWordAlpha);
+			outputClass.writeOutputFile("\n" + unseenEventCount + "\t" + unseenEvent + "\t" + 0 + "\t" + unseenEventProbability);
 		} 
 		catch (IOException e) 
 		{

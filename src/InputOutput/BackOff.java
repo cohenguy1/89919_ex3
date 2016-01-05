@@ -72,12 +72,8 @@ public class BackOff
 		
 		for(String word : prevWordSequential.keySet())
 		{
-			long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
-			if (wordAfterPrevOccurences > 0) 
-			{
-				sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
-				sumPWords -= LidstoneModel.getUnigramPLidstone(word);
-			}
+			sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
+			sumPWords -= LidstoneModel.getUnigramPLidstone(word);
 		}	
 
 		if (sumPWordPrevWord/sumPWords <= 0)

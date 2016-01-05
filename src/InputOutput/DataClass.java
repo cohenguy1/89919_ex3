@@ -228,9 +228,9 @@ public class DataClass {
 				{					
 					if(!xPrecentPasted && count < numFirstXPrecent)
 					{
-						AddWordToMap(firstXPrecentWordsMap, word, prevWord);
-
 						// add word to map
+						AddWordToMap(firstXPrecentWordsMap, word, prevWord);
+						
 						count++;
 					}
 					else
