@@ -40,7 +40,7 @@ public class Ex3
 			devData.readInputFile(devl_inputFile);
 
 			// Output 6
-			outputClass.writeOutput(devData.getTotalWordsInDocs());
+			outputClass.writeOutput(devData.getTotalWordsInDocsWithoutBeginArticle());
 
 			Map<String, Map<String, Integer>> lidstoneTrainMap = new TreeMap<String, Map<String, Integer>>();
 			Map<String, Map<String, Integer>> validationMap  = new TreeMap<String, Map<String, Integer>>();
@@ -91,8 +91,9 @@ public class Ex3
 			DataClass testData = new DataClass();
 			testData.readInputFile(test_inputFile);
 			
-			long testSize = DataClass.wordsTotalAmount(testData.getMapTotalDocsWords());
-			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, testData.getMapTotalDocsWords(), testSize));
+			// Output 17
+			long testSizeWithoutBeginArticle = DataClass.wordsTotalAmount(testData.getMapTotalDocsWords());
+			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, testData.getMapTotalDocsWords(), testSizeWithoutBeginArticle));
 			
 			ArrayList<Event> eventList = new ArrayList<Event>();
 

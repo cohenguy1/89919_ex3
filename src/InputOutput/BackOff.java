@@ -58,7 +58,6 @@ public class BackOff
 		}
 		
 		AlphaValues.put(DataClass.BEGIN_ARTICLE, CalculateAlpha(bigramLambda, lidstoneTrainMap, trainingSizeWithoutBeginArticle, DataClass.BEGIN_ARTICLE)); 
-		//TODO: check if good
 
 	}
 

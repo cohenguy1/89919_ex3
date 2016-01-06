@@ -359,7 +359,7 @@ public class DataClass {
 		return mapTotalDocsPrevWords;
 	}
 
-	public long getTotalWordsInDocs() {
+	public long getTotalWordsInDocsWithoutBeginArticle() {
 		return totalWordsInDocsWithoutBeginArticle;
 	}
 
