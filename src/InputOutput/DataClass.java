@@ -15,30 +15,30 @@ import java.util.TreeMap;
 public class DataClass {
 
 	public static String UNSEEN_WORD = "unseen-word";
-	public static String FirstArticleWord = "begin-article";
+	public static String BEGIN_ARTICLE = "begin-article";
 	private boolean skipLine = true;
 
 	private List<Set<Topics>> docsTopicList;
 
-	private List<Map<String,Map<String, Integer>>> docsMapList;
-	private List<Map<String,Map<String, Integer>>> docsSequentialList;
+	private List<Map<String,Map<String, Integer>>> docsMapPrevList;
+	private List<Map<String,Map<String, Integer>>> docsMapSequentList;
 
 	private List<String> docsStringList;
 
-	private Map<String, Map<String, Integer>> mapTotalDocsWords;
-	public static Map<String, Map<String, Integer>> mapTotalSequentialDocsWords;
-	private long totalWordsInDocs;
+	private Map<String, Map<String, Integer>> mapTotalDocsPrevWords;
+	public static Map<String, Map<String, Integer>> mapTotalDocsSequentWords;
+	private long totalWordsInDocsWithoutBeginArticle;
 	
-	public static Map<String, Long> trainMapWordCount = new HashMap<String, Long>();
+	public static Map<String, Long> WordCountMapInTrainThatHavePrev = new HashMap<String, Long>();
 	
-	public static Map<String, Integer> trainMapNotLastWordCount = new HashMap<String, Integer>();
+	public static Map<String, Integer> wordCountMapInTrainThatAreNotLastWithBeginArticle = new HashMap<String, Integer>();
 	public static Map<String, Double> trainMapLidstonUnigram = new HashMap<String, Double>();
 
 
 	public DataClass(){
 		this.docsTopicList = new ArrayList<Set<Topics>>();
-		this.docsMapList = new ArrayList<Map<String,Map<String, Integer>>>();
-		this.docsSequentialList = new ArrayList<Map<String,Map<String, Integer>>>();
+		this.docsMapPrevList = new ArrayList<Map<String,Map<String, Integer>>>();
+		this.docsMapSequentList = new ArrayList<Map<String,Map<String, Integer>>>();
 		this.docsStringList = new ArrayList<String>();
 	}
 
@@ -70,9 +70,10 @@ public class DataClass {
 		}
 		fileReader.close();
 
-		mapTotalDocsWords = mapTotalDocsWordCount(this.docsMapList);
-		mapTotalSequentialDocsWords = mapTotalDocsWordCount(this.docsSequentialList);
-		totalWordsInDocs = wordsTotalAmount(mapTotalDocsWords);
+		mapTotalDocsPrevWords = mapTotalDocsWordCount(this.docsMapPrevList);
+		mapTotalDocsSequentWords = mapTotalDocsWordCount(this.docsMapSequentList);
+		totalWordsInDocsWithoutBeginArticle = wordsTotalAmount(mapTotalDocsPrevWords);
+
 	}
 
 	private void skipEmptyLine(BufferedReader bufferedReader) {
@@ -100,7 +101,7 @@ public class DataClass {
 		Map<String, Map<String, Integer>> sequentialMap = new TreeMap<String, Map<String, Integer>>();
 
 		String[] words = inputLine.split(" ");
-		String prevWord = FirstArticleWord;
+		String prevWord = BEGIN_ARTICLE;
 
 		for(String word : words)
 		{
@@ -110,8 +111,8 @@ public class DataClass {
 			prevWord = word;
 		}
 
-		docsMapList.add(wordsMap);
-		docsSequentialList.add(sequentialMap);
+		docsMapPrevList.add(wordsMap);
+		docsMapSequentList.add(sequentialMap);
 
 	}
 
@@ -143,11 +144,11 @@ public class DataClass {
 	 */
 	private Map<String, Map<String, Integer>> listMapToMapTotalWordCount(List<Map<String, Map<String,Integer>>> docsList) 
 	{
-		int count = 0;
+//		int count = 0;
 		Map<String, Map<String, Integer>> wordsCountMap = new TreeMap<String, Map<String, Integer>>();
 		for(Map<String, Map<String, Integer>> docMap : docsList){
 			joinMaps(wordsCountMap,docMap);		
-			count++; 
+//			count++; 
 		}
 
 		return wordsCountMap;
@@ -198,7 +199,7 @@ public class DataClass {
 		}
 
 		// number of words in the first X precent
-		long numFirstXPrecent = Math.round(d*totalWordsInDocs);
+		long numFirstXPrecent = Math.round(d*totalWordsInDocsWithoutBeginArticle);
 		Output.writeConsoleWhenTrue("Precent of the words is "+numFirstXPrecent);
 
 		long count=0;
@@ -206,7 +207,7 @@ public class DataClass {
 		boolean xPrecentPasted = false;
 
 		while(count < numFirstXPrecent && !xPrecentPasted){
-			Map<String, Map<String, Integer>> currentDocMap = this.docsMapList.get(index);
+			Map<String, Map<String, Integer>> currentDocMap = this.docsMapPrevList.get(index);
 			long numWordsInDoc = wordsTotalAmount(currentDocMap);
 
 			// join the next doc (in case we don't pass X precent with the doc)
@@ -220,7 +221,7 @@ public class DataClass {
 				String currentDocString = this.docsStringList.get(index);
 				String[] words = currentDocString.split(" ");
 
-				String prevWord = FirstArticleWord;
+				String prevWord = BEGIN_ARTICLE;
 
 				for(String word : words)
 				{					
@@ -237,7 +238,7 @@ public class DataClass {
 						if (xPrecentPasted == false)
 						{
 							xPrecentPasted = true;
-							prevWord = FirstArticleWord;
+							prevWord = BEGIN_ARTICLE;
 						}
 						
 						AddWordToMap(lastXPrecentWordsMap, word, prevWord);
@@ -251,9 +252,9 @@ public class DataClass {
 		}
 
 		//After X precent, add all docs to the validation map (last set of words)
-		while(index < this.docsMapList.size())
+		while(index < this.docsMapPrevList.size())
 		{
-			Map<String, Map<String, Integer>> currentDocMap = this.docsMapList.get(index++);
+			Map<String, Map<String, Integer>> currentDocMap = this.docsMapPrevList.get(index++);
 			joinMaps(lastXPrecentWordsMap, currentDocMap);	
 		}
 	}
@@ -292,7 +293,7 @@ public class DataClass {
 
 		return count;
 	}
-	public static void trainMapPrevWordCount(Map<String, Map<String, Integer>> lidstoneTrainMap)
+	public static void keepWordCountMaptInTrainTharAreNotLast(Map<String, Map<String, Integer>> lidstoneTrainMap)
 	{
 		for (String word : lidstoneTrainMap.keySet())
 		{
@@ -300,17 +301,20 @@ public class DataClass {
 			{
 				int prevWordOccurreneces = lidstoneTrainMap.get(word).get(prevWord);
 				
-				trainMapNotLastWordCount.put(prevWord, trainMapNotLastWordCount.get(prevWord) == null ? prevWordOccurreneces : trainMapNotLastWordCount.get(prevWord) + prevWordOccurreneces);
+				wordCountMapInTrainThatAreNotLastWithBeginArticle.put(prevWord, wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) == null ? prevWordOccurreneces : wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) + prevWordOccurreneces);
+				
+//				if(prevWord.equals(DataClass.BEGIN_ARTICLE))
+//					System.out.println("stop307");
 			}
 		}
 	}
 	
-	public static void CountWordOccurrencesInTrainMap(Map<String, Map<String, Integer>> lidstoneTrainMap)
+	public static void keepCountWordOccurrencesMapInTrainThatHavePrev(Map<String, Map<String, Integer>> lidstoneTrainMap)
 	{
 		for (String word : lidstoneTrainMap.keySet())
 		{
 			// sum all occurrences of the word (by the prev words set)
-			trainMapWordCount.put(word, wordsTotalAmountReg(lidstoneTrainMap.get(word)));
+			WordCountMapInTrainThatHavePrev.put(word, wordsTotalAmountReg(lidstoneTrainMap.get(word)));
 		}
 	}
 	
@@ -323,7 +327,8 @@ public class DataClass {
 		
 		trainMapLidstonUnigram.put(UNSEEN_WORD, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, UNSEEN_WORD));
 
-		trainMapLidstonUnigram.remove(FirstArticleWord);	
+//		trainMapLidstonUnigram.put(BEGIN_ARTICLE, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, BEGIN_ARTICLE));
+//		trainMapLidstonUnigram.remove(BEGIN_ARTICLE); //TODO: check if good	
 	}
 
 	/*
@@ -331,12 +336,12 @@ public class DataClass {
 	 */
 	public static long getWordOccurrences(Map<String, Map<String, Integer>> map, String word)
 	{
-		if (trainMapWordCount.get(word) == null)
-		{
-			return 0;
-		}
+//		if (WordCountMapInTrainThatHavePrev.get(word) == null)
+//		{
+//			return 0;
+//		}
 		
-		return trainMapWordCount.get(word);
+		return WordCountMapInTrainThatHavePrev.get(word) == null ? 0 : WordCountMapInTrainThatHavePrev.get(word);
 	}
 	
 	public static int getWordOccurrences(Map<String, Map<String, Integer>> map, String word, String prevWord)
@@ -351,11 +356,11 @@ public class DataClass {
 	
 	public Map<String, Map<String, Integer>> getMapTotalDocsWords() 
 	{
-		return mapTotalDocsWords;
+		return mapTotalDocsPrevWords;
 	}
 
 	public long getTotalWordsInDocs() {
-		return totalWordsInDocs;
+		return totalWordsInDocsWithoutBeginArticle;
 	}
 
 	public List<Set<Topics>> getDocsTopicList() {
@@ -363,11 +368,11 @@ public class DataClass {
 	}
 
 	public List<Map<String, Map<String, Integer>>> getDocsList() {
-		return docsMapList;
+		return docsMapPrevList;
 	}
 
 	public void setDocsList(List<Map<String, Map<String, Integer>>> docsList) {
-		this.docsMapList = docsList;
+		this.docsMapPrevList = docsList;
 	}
 
 	public void setDocsTopicList(List<Set<Topics>> docsTopicList) {

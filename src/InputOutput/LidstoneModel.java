@@ -19,13 +19,17 @@ public class LidstoneModel
 	public static double CalcBigramPLidstone(double lambda, Map<String, Map<String, Integer>> lidstoneTrainMap, String word, String prevWord)
 	{
 		long prevWordNotLastOccurences;
-		if (prevWord == DataClass.FirstArticleWord)
+		if (prevWord == DataClass.BEGIN_ARTICLE)
 		{
-			prevWordNotLastOccurences = DataClass.trainMapNotLastWordCount.get(prevWord) == null ? 0 : DataClass.trainMapNotLastWordCount.get(prevWord);
+			prevWordNotLastOccurences = DataClass.wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) == null ? 0 : DataClass.wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord);
+			if (prevWordNotLastOccurences==0)
+				System.out.println("stop26");
 		}
 		else
 		{
-			prevWordNotLastOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, prevWord);
+//			prevWordNotLastOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, prevWord);
+			prevWordNotLastOccurences = DataClass.wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) == null ? 0 : DataClass.wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord);
+
 		}
 		
 		long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);

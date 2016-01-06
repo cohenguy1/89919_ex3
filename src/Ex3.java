@@ -13,7 +13,7 @@ import InputOutput.Output;
 
 public class Ex3 
 {
-	public static long TrainingSize;
+	public static long TrainingSizeWithoutBeginArticle;
 
 	public static void main(String[] args) 
 	{
@@ -47,20 +47,20 @@ public class Ex3
 			devData.splitXPrecentOfDocsWords(0.9, lidstoneTrainMap, validationMap);
 			
 			// Output 7
-			long validationSize = DataClass.wordsTotalAmount(validationMap);
-			outputClass.writeOutput(validationSize);
+			long validationSizeWithoutBeginArticle = DataClass.wordsTotalAmount(validationMap);
+			outputClass.writeOutput(validationSizeWithoutBeginArticle);
 
-			DataClass.CountWordOccurrencesInTrainMap(lidstoneTrainMap);
+			DataClass.keepCountWordOccurrencesMapInTrainThatHavePrev(lidstoneTrainMap);
 			
-			TrainingSize = DataClass.wordsTotalAmount(lidstoneTrainMap);
-			DataClass.trainMapPrevWordCount(lidstoneTrainMap);  
-			DataClass.trainMapCalcLidstonUnigram(lidstoneTrainMap, TrainingSize);
+			TrainingSizeWithoutBeginArticle = DataClass.wordsTotalAmount(lidstoneTrainMap);
+			DataClass.keepWordCountMaptInTrainTharAreNotLast(lidstoneTrainMap);  
+			DataClass.trainMapCalcLidstonUnigram(lidstoneTrainMap, TrainingSizeWithoutBeginArticle);
 			
 			// Output 8
-			outputClass.writeOutput(TrainingSize);
+			outputClass.writeOutput(TrainingSizeWithoutBeginArticle);
 
 			// Output 9
-			outputClass.writeOutput(lidstoneTrainMap.keySet().size()); 
+			outputClass.writeOutput(lidstoneTrainMap.keySet().size()); //without begin-article 
 
 			// Output 10
 			outputClass.writeOutput(DataClass.getWordOccurrences(lidstoneTrainMap, inputWord1));
@@ -69,21 +69,21 @@ public class Ex3
 			outputClass.writeOutput(DataClass.getWordOccurrences(lidstoneTrainMap, inputWord2, inputWord1));
 
 			// Output 12
-			outputClass.writeOutput(calculatePerplexityByBackOff(0.0001, lidstoneTrainMap, validationMap, validationSize));
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.0001, lidstoneTrainMap, validationMap, validationSizeWithoutBeginArticle));
 
 			// Output 13
-			outputClass.writeOutput(calculatePerplexityByBackOff(0.001, lidstoneTrainMap, validationMap, validationSize));
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.001, lidstoneTrainMap, validationMap, validationSizeWithoutBeginArticle));
 
 			// Output 14
-			outputClass.writeOutput(calculatePerplexityByBackOff(0.1, lidstoneTrainMap, validationMap, validationSize));
+			outputClass.writeOutput(calculatePerplexityByBackOff(0.1, lidstoneTrainMap, validationMap, validationSizeWithoutBeginArticle));
 
-			double bestBigramLambda = getBestLambda(lidstoneTrainMap, validationMap, validationSize);
+			double bestBigramLambda = getBestLambda(lidstoneTrainMap, validationMap, validationSizeWithoutBeginArticle);
 
 			// Output 15
 			outputClass.writeOutput(String.format("%.4f", bestBigramLambda));
 
 			// Output 16
-			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, validationMap, validationSize));
+			outputClass.writeOutput(calculatePerplexityByBackOff(bestBigramLambda, lidstoneTrainMap, validationMap, validationSizeWithoutBeginArticle));
 
 			double lambda = 0.001;
 			//BackOff.modelSanityCheck(lambda, lidstoneTrainMap);
@@ -96,13 +96,13 @@ public class Ex3
 			
 			ArrayList<Event> eventList = new ArrayList<Event>();
 
-			double inputWordAlpha = BackOff.CalculateAlpha(lambda, lidstoneTrainMap, TrainingSize, inputWord1);
+			double inputWordAlpha = BackOff.CalculateAlpha(lambda, lidstoneTrainMap, TrainingSizeWithoutBeginArticle, inputWord1);
 			
 			for (String word : lidstoneTrainMap.keySet())
 			{
 				long wordAfterInputWordOcc = DataClass.getWordOccurrences(lidstoneTrainMap, word, inputWord1);
 
-				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, TrainingSize, word, inputWord1, inputWordAlpha);
+				double probability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, TrainingSizeWithoutBeginArticle, word, inputWord1, inputWordAlpha);
 				
 				eventList.add(new Event(word, wordAfterInputWordOcc, probability));
 			}
@@ -120,7 +120,7 @@ public class Ex3
 			
 			long unseenEventCount = Output.vocabulary_size - eventList.size();
 			String unseenEvent = "UNSEEN_EVENT";
-			double unseenEventProbability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, TrainingSize, unseenEvent, inputWord1, inputWordAlpha);
+			double unseenEventProbability = BackOff.calcBigramBackOff(lambda, lidstoneTrainMap, TrainingSizeWithoutBeginArticle, unseenEvent, inputWord1, inputWordAlpha);
 			outputClass.writeOutputFile("\n" + unseenEventCount + "\t" + unseenEvent + "\t" + 0 + "\t" + unseenEventProbability);
 		} 
 		catch (IOException e) 
@@ -132,16 +132,12 @@ public class Ex3
 	/*
 	 * Returns model perplexity 
 	 */
-	private static double calculatePerplexityByBackOff(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, Map<String, Map<String, Integer>> validationMap, long validationSize) 
+	private static double calculatePerplexityByBackOff(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, Map<String, Map<String, Integer>> validationMap, long validationSizeWithoutBeginArticle) 
 	{		
 		double sumPWords = 0;
 
 
-	    SimpleDateFormat ft = new SimpleDateFormat("hh:mm:ss");
-
-		System.out.println("starting alpha calc time: " + ft.format(new Date()));
-		BackOff.CalculateAlphaValues(bigramLambda, validationMap.keySet(), lidstoneTrainMap, TrainingSize);
-		System.out.println("alpha finished time: " + ft.format(new Date()));
+		BackOff.CalculateAlphaValues(bigramLambda, validationMap.keySet(), lidstoneTrainMap, TrainingSizeWithoutBeginArticle);
 		
 		for (String word : validationMap.keySet())
 		{
@@ -152,7 +148,7 @@ public class Ex3
 				
 				//if(wordAfterPrevOccurences > 0)	
 				//{
-					double pWord = BackOff.calcBigramBackOff(bigramLambda,	lidstoneTrainMap, TrainingSize, word,
+					double pWord = BackOff.calcBigramBackOff(bigramLambda,	lidstoneTrainMap, TrainingSizeWithoutBeginArticle, word,
 							prevWord, BackOff.GetAlphaValue(prevWord));
 					
 					// adds the probability to the sum occurrences time (as the number of sequential occurrences in the validation map)
@@ -161,9 +157,9 @@ public class Ex3
 			}
 		}
 
-		System.out.println("finished loop " + ft.format(new Date()));
+//		System.out.println("finished loop " + ft.format(new Date()));
 		
-		double perplexity = Math.pow(2,(-1.0/validationSize) * sumPWords); 
+		double perplexity = Math.pow(2,(-1.0/validationSizeWithoutBeginArticle) * sumPWords); 
 		return perplexity;
 	}
 
@@ -177,12 +173,12 @@ public class Ex3
 		// iterate over the lambdas from 0.0001 to 0.02 (1 to 200 divided by 10,000, for accuracies) 
 		double DIVIDE_LAMDA = 10000.0;
 		
-	    SimpleDateFormat ft = new SimpleDateFormat("hh:mm:ss");
+//	    SimpleDateFormat ft = new SimpleDateFormat("hh:mm:ss");
 
 		for (int lambdaIndex = 2; lambdaIndex <= 200; lambdaIndex++)
 		{
-			Date dNow = new Date();
-			System.out.println("lambda = " + lambdaIndex/DIVIDE_LAMDA + ", time: " + ft.format(dNow));
+//			Date dNow = new Date();
+//			System.out.println("lambda = " + lambdaIndex/DIVIDE_LAMDA + ", time: " + ft.format(dNow));
 			
 			// calculate the perplexity by this lambda
 			perplexity = calculatePerplexityByBackOff(lambdaIndex/DIVIDE_LAMDA, lidstoneTrainMap, validationMap, validationSize);
