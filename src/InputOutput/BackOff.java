@@ -14,12 +14,9 @@ public class BackOff
 	public static double UNIGRAM_LAMDA = 0.1;
 
 	public static double calcBigramBackOff(double bigramLambda,
-			Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize,
+			Map<String, Map<String, Integer>> lidstoneTrainMap,
 			String word, String prevWord, double prevWordAlphaValue) 
 	{
-		if (word.equals(DataClass.BEGIN_ARTICLE))
-			System.out.println("stop21");
-		
 		//check if word appears after prevWord - and use lidstone bigram or unigram
 		long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
 		double pWord;
@@ -27,17 +24,10 @@ public class BackOff
 		if (wordAfterPrevOccurences > 0)
 		{
 			pWord = LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
-			if (pWord <= 0)
-				System.out.println("STOP31");
 		}
 		else 
 		{
-//			if (prevWord.equals(DataClass.BEGIN_ARTICLE))
-//				System.out.println("stop36");
 			pWord = prevWordAlphaValue * LidstoneModel.getUnigramPLidstone(word);
-
-			if (pWord <= 0)
-				System.out.println("STOP39");
 		}
 
 		return pWord;
@@ -48,41 +38,35 @@ public class BackOff
 		return AlphaValues.get(word) == null ? 1 : AlphaValues.get(word);
 	}
 
-	public static void CalculateAlphaValues(double bigramLambda, Set<String> wordToCalcFor, Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSizeWithoutBeginArticle)
+	public static void CalculateAlphaValues(double bigramLambda, Set<String> wordToCalcFor)
 	{
 		AlphaValues = new TreeMap<String, Double>();
 
 		for (String prevWord : wordToCalcFor)
 		{
-			AlphaValues.put(prevWord, CalculateAlpha(bigramLambda, lidstoneTrainMap, trainingSizeWithoutBeginArticle, prevWord));
+			AlphaValues.put(prevWord, CalculateAlpha(bigramLambda, prevWord));
 		}
-		
-		AlphaValues.put(DataClass.BEGIN_ARTICLE, CalculateAlpha(bigramLambda, lidstoneTrainMap, trainingSizeWithoutBeginArticle, DataClass.BEGIN_ARTICLE)); 
-
 	}
 
-	public static double CalculateAlpha(double bigramLambda, Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingSize,
-			String prevWord)
+	public static double CalculateAlpha(double bigramLambda, String prevWord)
 {
-		Map<String, Integer> prevWordSequential = DataClass.mapTotalDocsSequentWords.get(prevWord);
+		Map<String, Integer> prevWordSequential = DataClass.SequentialMap.get(prevWord);
 
-		if ( prevWordSequential == null)
+		if (DataClass.TrainingMap.get(prevWord) == null || prevWordSequential == null)
 		{
-			if (lidstoneTrainMap.get(prevWord) == null)
-				System.out.println("stop73");
 			return 1;
 		}
 
 		double sumPWordPrevWord = 1;
 		double sumPWords = 1;
-//		int count=0;
+
 		for(String word : prevWordSequential.keySet())
 		{
-			long wordAfterPrevOccurences = DataClass.getWordOccurrences(lidstoneTrainMap, word, prevWord);
-			if (wordAfterPrevOccurences > 0){
-				sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, lidstoneTrainMap, word, prevWord);
+			long wordAfterPrevOccurences = DataClass.getWordOccurrences(DataClass.TrainingMap, word, prevWord);
+			if (wordAfterPrevOccurences > 0)
+			{
+				sumPWordPrevWord -= LidstoneModel.CalcBigramPLidstone(bigramLambda, DataClass.TrainingMap, word, prevWord);
 				sumPWords -= LidstoneModel.getUnigramPLidstone(word);
-//				count++;
 			}
 		}	
 
@@ -98,12 +82,11 @@ public class BackOff
 	public static void modelSanityCheck(double bigramLambda, Map<String, Map<String, Integer>> trainMap)
 	{		
 		long N0 = Output.vocabulary_size - trainMap.keySet().size();
-		long trainingSize = DataClass.wordsTotalAmount(trainMap);
-
+		
 		// Prevent inaccuracies by java double calculations
 		double epsilon = 0.000000000000002;
 
-		CalculateAlphaValues(bigramLambda, trainMap.keySet(), trainMap, trainingSize);
+		CalculateAlphaValues(bigramLambda, trainMap.keySet());
 
 		for(String word : trainMap.keySet())
 		{
@@ -112,11 +95,11 @@ public class BackOff
 			double prevWordAlpha = GetAlphaValue(word);
 
 			// Contribution of all words that don't appear in the training set (unseen events)
-			sum += N0 * calcBigramBackOff(bigramLambda, trainMap, trainingSize, unseenWord, word, prevWordAlpha);
+			sum += N0 * calcBigramBackOff(bigramLambda, trainMap, unseenWord, word, prevWordAlpha);
 
 			for(String nextWord : trainMap.keySet())
 			{
-				sum += calcBigramBackOff(bigramLambda, trainMap, trainingSize, nextWord, word, prevWordAlpha);
+				sum += calcBigramBackOff(bigramLambda, trainMap, nextWord, word, prevWordAlpha);
 			}
 
 			if (Math.abs(1 - sum) < epsilon)
@@ -127,34 +110,6 @@ public class BackOff
 			{
 				System.out.println("BackOff is BAD. Value: " + sum);
 			}
-		}
-	}
-
-	public static void modelSanityCheck2(Map<String, Map<String, Integer>> trainMap)
-	{		
-		long N0 = Output.vocabulary_size - trainMap.keySet().size();
-
-		// Prevent inaccuracies by java double calculations
-		double epsilon = 0.000000000000002;
-
-		double sum = 0;
-
-		// Contribution of all words that don't appear in the training set (unseen events)
-		sum += N0 * LidstoneModel.getUnigramPLidstone("UNSEEN_WORD");
-
-		for(String word : trainMap.keySet())
-		{
-			sum += LidstoneModel.getUnigramPLidstone(word);
-		}
-
-
-		if (Math.abs(1 - sum) < epsilon)
-		{
-			Output.writeConsoleWhenTrue("BackOff is GOOD!");
-		}
-		else
-		{
-			System.out.println("BackOff is BAD. Value: " + sum);
 		}
 	}
 }

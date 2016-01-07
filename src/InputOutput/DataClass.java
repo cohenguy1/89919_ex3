@@ -21,15 +21,17 @@ public class DataClass {
 	private List<Set<Topics>> docsTopicList;
 
 	private List<Map<String,Map<String, Integer>>> docsMapPrevList;
-	private List<Map<String,Map<String, Integer>>> docsMapSequentList;
 
-	private List<String> docsStringList;
+	private List<Document> docsList;
 
-	private Map<String, Map<String, Integer>> mapTotalDocsPrevWords;
-	public static Map<String, Map<String, Integer>> mapTotalDocsSequentWords;
+	public static Map<String, Map<String, Integer>> TrainingMap = new TreeMap<String, Map<String, Integer>>();
+	public static Map<String, Map<String, Integer>> SequentialMap = new TreeMap<String, Map<String, Integer>>();
+	
+	public static Map<String, Map<String, Integer>> TestMap = new TreeMap<String, Map<String, Integer>>();
+	
 	private long totalWordsInDocsWithoutBeginArticle;
 	
-	public static Map<String, Long> WordCountMapInTrainThatHavePrev = new HashMap<String, Long>();
+	public static Map<String, Integer> WordCountMapInTrainThatHavePrev = new HashMap<String, Integer>();
 	
 	public static Map<String, Integer> wordCountMapInTrainThatAreNotLastWithBeginArticle = new HashMap<String, Integer>();
 	public static Map<String, Double> trainMapLidstonUnigram = new HashMap<String, Double>();
@@ -37,9 +39,7 @@ public class DataClass {
 
 	public DataClass(){
 		this.docsTopicList = new ArrayList<Set<Topics>>();
-		this.docsMapPrevList = new ArrayList<Map<String,Map<String, Integer>>>();
-		this.docsMapSequentList = new ArrayList<Map<String,Map<String, Integer>>>();
-		this.docsStringList = new ArrayList<String>();
+		this.docsList = new ArrayList<Document>();
 	}
 
 	/*
@@ -53,6 +53,7 @@ public class DataClass {
 		BufferedReader bufferedReader = new BufferedReader(fileReader);
 
 		String docTopicLine;
+		totalWordsInDocsWithoutBeginArticle = 0;
 
 		while ((docTopicLine = bufferedReader.readLine()) != null) {
 
@@ -61,19 +62,17 @@ public class DataClass {
 			skipEmptyLine(bufferedReader);
 
 			String docTextLine = bufferedReader.readLine();
-			mapWordCount(docTextLine);
+			long wordCount = wordCount(docTextLine);
 			
-			docsStringList.add(docTextLine);
+			docsList.add(new Document(docTextLine, wordCount));
 
+			totalWordsInDocsWithoutBeginArticle += wordCount;
+			
 			skipEmptyLine(bufferedReader);
 
 		}
+		
 		fileReader.close();
-
-		mapTotalDocsPrevWords = mapTotalDocsWordCount(this.docsMapPrevList);
-		mapTotalDocsSequentWords = mapTotalDocsWordCount(this.docsMapSequentList);
-		totalWordsInDocsWithoutBeginArticle = wordsTotalAmount(mapTotalDocsPrevWords);
-
 	}
 
 	private void skipEmptyLine(BufferedReader bufferedReader) {
@@ -95,25 +94,29 @@ public class DataClass {
 	/*
 	 * Adds each word of the line read to the word mapping 
 	 */
+	private long wordCount(String inputLine) 
+	{
+		String[] words = inputLine.split(" ");
+		return words.length;
+	}
+	
+	/*
+	 * Adds each word of the line read to the word mapping 
+	 */
 	private void mapWordCount(String inputLine) 
 	{
-		Map<String, Map<String, Integer>> wordsMap = new TreeMap<String, Map<String, Integer>>();
-		Map<String, Map<String, Integer>> sequentialMap = new TreeMap<String, Map<String, Integer>>();
-
 		String[] words = inputLine.split(" ");
 		String prevWord = BEGIN_ARTICLE;
 
+		AddWordToMap(TrainingMap, BEGIN_ARTICLE, "");
+		
 		for(String word : words)
 		{
-			AddWordToMap(wordsMap, word, prevWord);
-			AddToSequentialMap(sequentialMap, word, prevWord);
+			AddWordToMap(TrainingMap, word, prevWord);
+			AddToSequentialMap(SequentialMap, word, prevWord);
 
 			prevWord = word;
 		}
-
-		docsMapPrevList.add(wordsMap);
-		docsMapSequentList.add(sequentialMap);
-
 	}
 
 	private void AddToSequentialMap(Map<String, Map<String, Integer>> prevWordsMap,
@@ -139,61 +142,10 @@ public class DataClass {
 		Output.writeConsoleWhenTrue(word + "-" + wordsMap.get(word));
 	}
 
-	/*
-	 * Joins the doc map to the total map
-	 */
-	private Map<String, Map<String, Integer>> listMapToMapTotalWordCount(List<Map<String, Map<String,Integer>>> docsList) 
+	public void splitXPrecentOfDocsWords(double d, Map<String, Map<String, Integer>> validationMap) 
 	{
-//		int count = 0;
-		Map<String, Map<String, Integer>> wordsCountMap = new TreeMap<String, Map<String, Integer>>();
-		for(Map<String, Map<String, Integer>> docMap : docsList){
-			joinMaps(wordsCountMap,docMap);		
-//			count++; 
-		}
-
-		return wordsCountMap;
-	}
-
-	private void joinMaps(Map<String, Map<String, Integer>> wordsCountMap, Map<String, Map<String, Integer>> docMap){
-		for (String word : docMap.keySet()){
-			joinMapValues(wordsCountMap,docMap,word);
-		}
-	}
-
-	/*
-	 * Join key from 2 maps
-	 */
-	private void joinMapValues(Map<String, Map<String, Integer>> wordsCountMap, Map<String, Map<String, Integer>> docMap, String key)
-	{
-		Map<String, Integer> wordMap = wordsCountMap.get(key);
-
-		if (wordMap == null)
+		if(d < 0||d > 1)
 		{
-			Map<String, Integer> newWordMap = new TreeMap<String, Integer>();
-
-			for (String word : docMap.get(key).keySet())
-			{
-				newWordMap.put(word, docMap.get(key).get(word));
-			}
-
-			wordsCountMap.put(key, newWordMap);
-		}
-		else
-		{
-			for (String word : docMap.get(key).keySet())
-			{
-				int wordApprearances = docMap.get(key).get(word);
-				wordMap.put(word, wordMap.get(word) == null ? wordApprearances : wordMap.get(word) + wordApprearances);				
-			}
-		}
-
-		Output.writeConsoleWhenTrue(key + "-" + wordsCountMap.get(key));
-	}
-
-	public void splitXPrecentOfDocsWords(double d, Map<String, Map<String, Integer>> firstXPrecentWordsMap, 
-			Map<String, Map<String, Integer>> lastXPrecentWordsMap) 
-	{
-		if(d<0||d>1){
 			System.out.println("Precent should be between 0 to 1");
 			return;
 		}
@@ -202,33 +154,38 @@ public class DataClass {
 		long numFirstXPrecent = Math.round(d*totalWordsInDocsWithoutBeginArticle);
 		Output.writeConsoleWhenTrue("Precent of the words is "+numFirstXPrecent);
 
-		long count=0;
-		int index=0;
+		long count = 0;
+		int index = 0;
 		boolean xPrecentPasted = false;
 
-		while(count < numFirstXPrecent && !xPrecentPasted){
-			Map<String, Map<String, Integer>> currentDocMap = this.docsMapPrevList.get(index);
-			long numWordsInDoc = wordsTotalAmount(currentDocMap);
-
+		String[] words;
+		String prevWord;
+		
+		while(count < numFirstXPrecent && !xPrecentPasted)
+		{
+			Document currentDoc = this.docsList.get(index);
+			
 			// join the next doc (in case we don't pass X precent with the doc)
-			if(count+numWordsInDoc<=numFirstXPrecent){
-				joinMaps(firstXPrecentWordsMap,currentDocMap);	
-				count+=numWordsInDoc;
+			if(count + currentDoc.wordCount <= numFirstXPrecent)
+			{
+				mapWordCount(currentDoc.content);
+				count += currentDoc.wordCount;
 			}
 			else{
 				// If splitting the doc is needed, 
 				// run over the doc in which we pass the X percent by the order of the words in the doc
-				String currentDocString = this.docsStringList.get(index);
-				String[] words = currentDocString.split(" ");
+				words = currentDoc.content.split(" ");
 
-				String prevWord = BEGIN_ARTICLE;
+				prevWord = BEGIN_ARTICLE;
+				AddWordToMap(TrainingMap, BEGIN_ARTICLE, "");
 
 				for(String word : words)
 				{					
 					if(!xPrecentPasted && count < numFirstXPrecent)
 					{
 						// add word to map
-						AddWordToMap(firstXPrecentWordsMap, word, prevWord);
+						AddWordToMap(TrainingMap, word, prevWord);
+						AddToSequentialMap(SequentialMap, word, prevWord);
 						
 						count++;
 					}
@@ -239,9 +196,11 @@ public class DataClass {
 						{
 							xPrecentPasted = true;
 							prevWord = BEGIN_ARTICLE;
+							
+							AddWordToMap(validationMap, BEGIN_ARTICLE, "");
 						}
 						
-						AddWordToMap(lastXPrecentWordsMap, word, prevWord);
+						AddWordToMap(validationMap, word, prevWord);
 					}
 
 					prevWord = word;
@@ -252,16 +211,23 @@ public class DataClass {
 		}
 
 		//After X precent, add all docs to the validation map (last set of words)
-		while(index < this.docsMapPrevList.size())
+		while(index < this.docsList.size())
 		{
-			Map<String, Map<String, Integer>> currentDocMap = this.docsMapPrevList.get(index++);
-			joinMaps(lastXPrecentWordsMap, currentDocMap);	
+			Document currentDoc = this.docsList.get(index++);
+			
+			words = currentDoc.content.split(" ");
+			prevWord = BEGIN_ARTICLE;
+
+			AddWordToMap(validationMap, BEGIN_ARTICLE, "");
+			
+			for(String word : words)
+			{					
+				// add word to map
+				AddWordToMap(validationMap, word, prevWord);
+				
+				prevWord = word;
+			}
 		}
-	}
-
-	private Map<String, Map<String, Integer>> mapTotalDocsWordCount(List<Map<String, Map<String, Integer>>> docsMapList) {
-
-		return listMapToMapTotalWordCount(docsMapList);
 	}
 
 	/*
@@ -281,54 +247,58 @@ public class DataClass {
 
 		return count;
 	}
-
-	public static long wordsTotalAmountReg(Map<String, Integer> wordsCountMap)
+	
+	public static long wordsTotalAmountWithoutBeginArticle(Map<String, Map<String, Integer>> mapTotalDocsWords)
 	{
-		long count=0;
+		long totalAmount = wordsTotalAmount(mapTotalDocsWords);
+		
+		int beginArticleCount = mapTotalDocsWords.get(BEGIN_ARTICLE) == null ? 0 : wordsTotalAmountReg(mapTotalDocsWords.get(BEGIN_ARTICLE));
 
-		for(int value :  wordsCountMap.values())
+		return totalAmount - beginArticleCount;
+	}
+	
+	public static int wordsTotalAmountReg(Map<String, Integer> wordsCountMap)
+	{
+		int count = 0;
+
+		for (int value :  wordsCountMap.values())
 		{
 			count += value;
 		}
 
 		return count;
 	}
-	public static void keepWordCountMaptInTrainTharAreNotLast(Map<String, Map<String, Integer>> lidstoneTrainMap)
+	
+	public static void keepWordCountMaptInTrainTharAreNotLast()
 	{
-		for (String word : lidstoneTrainMap.keySet())
+		for (String word : TrainingMap.keySet())
 		{
-			for (String prevWord : lidstoneTrainMap.get(word).keySet())
+			for (String prevWord : TrainingMap.get(word).keySet())
 			{
-				int prevWordOccurreneces = lidstoneTrainMap.get(word).get(prevWord);
+				int prevWordOccurreneces = TrainingMap.get(word).get(prevWord);
 				
 				wordCountMapInTrainThatAreNotLastWithBeginArticle.put(prevWord, wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) == null ? prevWordOccurreneces : wordCountMapInTrainThatAreNotLastWithBeginArticle.get(prevWord) + prevWordOccurreneces);
-				
-//				if(prevWord.equals(DataClass.BEGIN_ARTICLE))
-//					System.out.println("stop307");
 			}
 		}
 	}
 	
-	public static void keepCountWordOccurrencesMapInTrainThatHavePrev(Map<String, Map<String, Integer>> lidstoneTrainMap)
+	public static void keepCountWordOccurrencesMapInTrainThatHavePrev()
 	{
-		for (String word : lidstoneTrainMap.keySet())
+		for (String word : TrainingMap.keySet())
 		{
 			// sum all occurrences of the word (by the prev words set)
-			WordCountMapInTrainThatHavePrev.put(word, wordsTotalAmountReg(lidstoneTrainMap.get(word)));
+			WordCountMapInTrainThatHavePrev.put(word, wordsTotalAmountReg(TrainingMap.get(word)));
 		}
 	}
 	
-	public static void trainMapCalcLidstonUnigram(Map<String, Map<String, Integer>> lidstoneTrainMap, long trainingMapSize)
+	public static void trainMapCalcLidstonUnigram(long trainingMapSize)
 	{
-		for (String word : lidstoneTrainMap.keySet())
+		for (String word : TrainingMap.keySet())
 		{
-			trainMapLidstonUnigram.put(word, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, word));
+			trainMapLidstonUnigram.put(word, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, TrainingMap, trainingMapSize, word));
 		}
 		
-		trainMapLidstonUnigram.put(UNSEEN_WORD, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, UNSEEN_WORD));
-
-//		trainMapLidstonUnigram.put(BEGIN_ARTICLE, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, lidstoneTrainMap, trainingMapSize, BEGIN_ARTICLE));
-//		trainMapLidstonUnigram.remove(BEGIN_ARTICLE); //TODO: check if good	
+		trainMapLidstonUnigram.put(UNSEEN_WORD, LidstoneModel.CalcUnigramPLidstone(BackOff.UNIGRAM_LAMDA, TrainingMap, trainingMapSize, UNSEEN_WORD));
 	}
 
 	/*
@@ -336,11 +306,6 @@ public class DataClass {
 	 */
 	public static long getWordOccurrences(Map<String, Map<String, Integer>> map, String word)
 	{
-//		if (WordCountMapInTrainThatHavePrev.get(word) == null)
-//		{
-//			return 0;
-//		}
-		
 		return WordCountMapInTrainThatHavePrev.get(word) == null ? 0 : WordCountMapInTrainThatHavePrev.get(word);
 	}
 	
@@ -352,11 +317,6 @@ public class DataClass {
 		}
 
 		return map.get(word).get(prevWord) == null ? 0 : map.get(word).get(prevWord); 
-	}
-	
-	public Map<String, Map<String, Integer>> getMapTotalDocsWords() 
-	{
-		return mapTotalDocsPrevWords;
 	}
 
 	public long getTotalWordsInDocsWithoutBeginArticle() {
@@ -377,5 +337,47 @@ public class DataClass {
 
 	public void setDocsTopicList(List<Set<Topics>> docsTopicList) {
 		this.docsTopicList = docsTopicList;
+	}
+	
+	/*
+	 * Parse the input file
+	 */
+	public long readTestFile(String inputFile) throws IOException{
+
+		Output.writeConsoleWhenTrue(Output.folderPath+inputFile);
+
+		FileReader fileReader = new FileReader(Output.folderPath+inputFile);
+		BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+		String docTopicLine;
+		long totalWordsWithoutBeginArticle = 0;
+
+		while ((docTopicLine = bufferedReader.readLine()) != null) 
+		{
+			skipEmptyLine(bufferedReader);
+
+			String docTextLine = bufferedReader.readLine();
+			long wordCount = wordCount(docTextLine);
+
+			totalWordsWithoutBeginArticle += wordCount;
+
+			String[] words = docTextLine.split(" ");
+			String prevWord = BEGIN_ARTICLE;
+
+			AddWordToMap(TestMap, BEGIN_ARTICLE, "");
+			
+			for(String word : words)
+			{
+				AddWordToMap(TestMap, word, prevWord);
+
+				prevWord = word;
+			}
+			
+			skipEmptyLine(bufferedReader);
+		}
+		
+		fileReader.close();
+		
+		return totalWordsWithoutBeginArticle;
 	}
 }
